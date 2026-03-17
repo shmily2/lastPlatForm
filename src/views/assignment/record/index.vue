@@ -291,15 +291,10 @@ const viewFields = [
 
 // 实习分配弹框字段
 const editFields = [
-  {
-    title: '实习分配',
-    fields: [
       { prop: 'hospitalName', label: '实习医院', type: 'select', span: 24, required: true, filterable: true, placeholder: '请选择实习医院', options: hospitals },
       { prop: 'internDateRange', label: '实习起止时间', type: 'daterange', span: 24, required: true, placeholder: '请选择实习起止时间' },
       { prop: 'position', label: '职位', type: 'select', span: 24, placeholder: '请选择职位', options: positions },
       { prop: 'internPosition', label: '实习岗位', type: 'input', span: 24, placeholder: '请输入实习岗位' },
-    ]
-  }
 ]
 
 // 表单验证规则

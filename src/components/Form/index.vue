@@ -440,9 +440,9 @@ defineExpose({
 
 <style scoped>
 /* 查看模式 - 卡片式布局 */
-.view-mode {
+/* .view-mode {
   padding: 16px;
-}
+} */
 
 .info-card {
   background: #fff;

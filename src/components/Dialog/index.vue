@@ -285,6 +285,7 @@ defineExpose({
   overflow-y: auto;
   overflow-x: visible;
   box-sizing: border-box;
+  padding:20px;
 }
 
 .custom-dialog .el-dialog {

@@ -162,12 +162,12 @@
       </el-row>
     </div>
 
-    <!-- 右下角悬浮按钮 -->
+    <!-- 右下角悬浮按钮
     <div class="floating-btn">
       <el-icon :size="24">
         <Menu />
       </el-icon>
-    </div>
+    </div> -->
   </div>
 </template>
 

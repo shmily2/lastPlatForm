@@ -51,49 +51,55 @@
     </Crud>
 
     <!-- 查看对话框 -->
-    <el-dialog
+    <Dialog
+      ref="viewDialogRef"
       v-model="viewDialogVisible"
       title="周报详情"
       width="900px"
+      :form-label-width="formLabelWidth"
+      :show-footer="true"
+      :show-form="true"
+      :form-fields="viewFormFields"
+      :form-data="viewFormData"
+      :view-mode="true"
+      @update:form-data="viewFormData = $event"
       @close="handleViewDialogClose"
     >
-      <BaseForm
-        ref="viewFormRef"
-        v-model="viewFormData"
-        :fields="viewFormFields"
-        :disabled="true"
-        :show-buttons="false"
-      />
-    </el-dialog>
+      <template #footer>
+        <el-button type="primary" @click="viewDialogVisible = false">关闭</el-button>
+      </template>
+    </Dialog>
 
     <!-- 审批对话框 -->
-    <el-dialog
+    <Dialog
+      ref="approveDialogRef"
       v-model="approveDialogVisible"
       title="周报审批"
-      width="700px"
+      width="600px"
+      :form-label-width="formLabelWidth"
+      :show-footer="true"
+      :show-form="true"
+      :form-fields="approveFormFields"
+      :form-rules="approveFormRules"
+      :form-data="approveFormData"
+      :view-mode="false"
+      @update:form-data="approveFormData = $event"
       @close="handleApproveDialogClose"
     >
-      <BaseForm
-        ref="approveFormRef"
-        v-model="approveFormData"
-        :fields="approveFormFields"
-        :rules="approveFormRules"
-        :show-buttons="false"
-      />
       <template #footer>
         <el-button @click="approveDialogVisible = false">取消</el-button>
         <el-button type="danger" @click="handleReject">驳回</el-button>
         <el-button type="success" @click="handlePass">通过</el-button>
       </template>
-    </el-dialog>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import Crud from '@/components/Crud/index.vue'
-import BaseForm from '@/components/Form/index.vue'
+import Dialog from '@/components/Dialog/index.vue'
 
 // Mock API 配置
 const apiConfig = {
@@ -244,27 +250,23 @@ const viewFormFields = [
 const approveFormFields = [
   { prop: 'studentName', label: '学生', type: 'input', disabled: true, span: 12 },
   { prop: 'week', label: '周次', type: 'input', disabled: true, span: 12 },
-  { prop: 'status', label: '审批结果', type: 'select', span: 12, options: [
-    { label: '通过', value: '已通过' },
-    { label: '驳回', value: '已驳回' }
-  ]},
   { prop: 'score', label: '评分', type: 'input', span: 12, placeholder: '请输入评分（0-100）' },
   { prop: 'comment', label: '审批评语', type: 'textarea', span: 24, rows: 5, placeholder: '请输入审批意见' }
 ]
 
 // 审批表单验证规则
 const approveFormRules = {
-  status: [{ required: true, message: '请选择审批结果', trigger: 'change' }],
   score: [
     { required: true, message: '请输入评分', trigger: 'blur' },
-    { type: 'number', min: 0, max: 100, message: '评分范围为0-100', trigger: 'blur' }
+    { pattern: /^(?:[0-9]|[1-9][0-9]|100)$/, message: '评分范围为0-100', trigger: 'blur' }
   ],
   comment: [{ required: true, message: '请输入审批评语', trigger: 'blur' }]
 }
 
 // 查看对话框相关
 const viewDialogVisible = ref(false)
-const viewFormRef = ref()
+const viewDialogRef = ref()
+const formLabelWidth = '100px'
 const viewFormData = reactive({
   id: null,
   studentNo: '',
@@ -283,7 +285,7 @@ const viewFormData = reactive({
 
 // 审批对话框相关
 const approveDialogVisible = ref(false)
-const approveFormRef = ref()
+const approveDialogRef = ref()
 const approveFormData = reactive({
   id: null,
   studentName: '',
@@ -363,7 +365,8 @@ const handleApprove = (row) => {
 
 // 通过
 const handlePass = async () => {
-  const valid = await approveFormRef.value?.validate()
+  approveFormData.status = '已通过'
+  const valid = await approveDialogRef.value?.formRef?.validate()
   if (valid) {
     ElMessage.success('审批通过')
     approveDialogVisible.value = false
@@ -374,7 +377,7 @@ const handlePass = async () => {
 // 驳回
 const handleReject = async () => {
   approveFormData.status = '已驳回'
-  const valid = await approveFormRef.value?.validate()
+  const valid = await approveDialogRef.value?.formRef?.validate()
   if (valid) {
     ElMessage.success('已驳回')
     approveDialogVisible.value = false
@@ -412,12 +415,12 @@ const handleCurrentChange = (page) => {
 
 // 关闭查看对话框
 const handleViewDialogClose = () => {
-  viewFormRef.value?.clearValidate()
+  viewDialogRef.value?.formRef?.clearValidate()
 }
 
 // 关闭审批对话框
 const handleApproveDialogClose = () => {
-  approveFormRef.value?.clearValidate()
+  approveDialogRef.value?.formRef?.clearValidate()
 }
 </script>
 
