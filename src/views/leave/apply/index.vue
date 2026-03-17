@@ -8,18 +8,15 @@
       :show-actions="true"
       :action-width="220"
       :action-min-width="200"
-      :table-actions="{ view: true, edit: true, delete: true, approve: true }"
-      :actions="{ add: true, batchDelete: false, export: true, refresh: true }"
+      :table-actions="{ view: true, approve: true }"
+      :actions="{ add: false, batchDelete: false, export: true, refresh: true }"
       :page-sizes="[10, 20, 30, 50]"
       :api="apiConfig"
       :show-search="true"
       @search="handleSearch"
       @refresh="handleRefresh"
       @export="handleExport"
-      @add="handleAdd"
       @view="handleView"
-      @edit="handleEdit"
-      @delete="handleDelete"
       @approve="handleApprove"
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
@@ -27,7 +24,6 @@
       <!-- 自定义操作列 -->
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleView(row)">查看</el-button>
-        <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
         <el-button
           v-if="row.approvalStatus === 'pending'"
           type="success"
@@ -36,41 +32,48 @@
         >
           审批
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
       </template>
     </Crud>
 
     <!-- 新增/查看/编辑对话框 -->
-    <el-dialog
+    <Dialog
+      ref="dialogRef"
       v-model="dialogVisible"
       :title="dialogTitle"
       width="800px"
+      :form-label-width="formLabelWidth"
+      :show-footer="true"
+      :show-form="true"
+      :form-fields="formFields"
+      :form-rules="formRules"
+      :form-data="formData"
+      :view-mode="isViewMode"
+      @update:form-data="formData = $event"
       @close="handleDialogClose"
+      @confirm="handleSubmit"
     >
-      <BaseForm
-        ref="formRef"
-        v-model="formData"
-        :fields="formFields"
-        :rules="formRules"
-        :disabled="dialogMode === 'view'"
-        :show-buttons="false"
-      />
+      <!-- 自定义底部按钮 -->
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button v-if="dialogMode === 'approve'" type="success" @click="handleApproveSubmit">通过</el-button>
-        <el-button v-if="dialogMode === 'approve'" type="danger" @click="handleRejectSubmit">驳回</el-button>
-        <el-button v-if="dialogMode !== 'view'" type="primary" @click="handleSubmit">确定</el-button>
+        <!-- 审批模式：显示通过和驳回按钮 -->
+        <template v-if="dialogMode === 'approve'">
+          <el-button type="success" @click="handleApproveSubmit">通过</el-button>
+          <el-button type="danger" @click="handleRejectSubmit">驳回</el-button>
+        </template>
+        <!-- 查看模式：只显示确定按钮 -->
+        <el-button v-else-if="dialogMode === 'view'" type="primary" @click="dialogVisible = false">确定</el-button>
+        <!-- 新增/编辑模式：显示确定按钮 -->
+        <el-button v-else type="primary" @click="handleDialogConfirm">确定</el-button>
       </template>
-    </el-dialog>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import Crud from '@/components/Crud/index.vue'
-import BaseForm from '@/components/Form/index.vue'
-
+import Dialog from '@/components/Dialog/index.vue'
 // 学生数据
 const students = [
   { id: 1, name: '阮文欣', className: '护理2201' },
@@ -291,10 +294,6 @@ const apiConfig = {
     console.log('修改请假申请:', data)
     return Promise.resolve({ code: 200, message: '修改成功' })
   },
-  delete: (id) => {
-    console.log('删除请假申请:', id)
-    return Promise.resolve({ code: 200, message: '删除成功' })
-  },
   approve: (data) => {
     console.log('审批请假申请:', data)
     return Promise.resolve({ code: 200, message: '审批成功' })
@@ -305,9 +304,9 @@ const apiConfig = {
 const searchFields = [
   {
     prop: 'className',
-    label: '请选择班级/科室',
+    label: '请选择组织架构',
     type: 'select',
-    placeholder: '请选择班级/科室',
+    placeholder: '请选择组织架构',
     options: classes.map(c => ({ label: c, value: c })),
     span: 4
   },
@@ -315,15 +314,8 @@ const searchFields = [
     prop: 'studentName',
     label: '学生姓名',
     type: 'select',
-    placeholder: '请选择学生',
+    placeholder: '请选择学生/关键字',
     options: students.map(s => ({ label: s.name, value: s.name })),
-    span: 4
-  },
-  {
-    prop: 'keyword',
-    label: '请输入关键字',
-    type: 'input',
-    placeholder: '请输入关键字',
     span: 4
   },
   {
@@ -466,12 +458,16 @@ const formRules = {
 
 // Crud 组件引用
 const crudRef = ref()
-const formRef = ref()
+const dialogRef = ref()
+
+// 获取表单引用
+const formRef = computed(() => dialogRef.value?.formRef)
 
 // 对话框
 const dialogVisible = ref(false)
 const dialogTitle = ref('查看请假申请')
 const dialogMode = ref('view')
+const formLabelWidth = '100px'
 
 // 表单数据
 const formData = reactive({
@@ -504,39 +500,10 @@ const handleExport = () => {
   ElMessage.success('导出请假记录成功')
 }
 
-// 新增
-const handleAdd = () => {
-  dialogMode.value = 'add'
-  dialogTitle.value = '新建请假申请'
-  const now = new Date()
-  Object.assign(formData, {
-    id: null,
-    applicant: '当前用户',
-    className: '',
-    title: '',
-    type: '',
-    leaveDays: '',
-    leaveTime: now.toISOString().split('T')[0],
-    reason: '',
-    applyTime: now.toISOString(),
-    approvalStatus: 'pending',
-    approver: ''
-  })
-  dialogVisible.value = true
-}
-
 // 查看
 const handleView = (row) => {
   dialogMode.value = 'view'
   dialogTitle.value = '查看请假申请'
-  Object.assign(formData, row)
-  dialogVisible.value = true
-}
-
-// 编辑
-const handleEdit = (row) => {
-  dialogMode.value = 'edit'
-  dialogTitle.value = '编辑请假申请'
   Object.assign(formData, row)
   dialogVisible.value = true
 }
@@ -548,6 +515,9 @@ const handleApprove = (row) => {
   Object.assign(formData, row)
   dialogVisible.value = true
 }
+
+// 判断对话框是否为只读模式（查看或审批模式都不可编辑）
+const isViewMode = computed(() => dialogMode.value === 'view' || dialogMode.value === 'approve')
 
 // 审批通过
 const handleApproveSubmit = async () => {
@@ -593,19 +563,6 @@ const handleRejectSubmit = async () => {
   }
 }
 
-// 删除
-const handleDelete = (row) => {
-  ElMessageBox.confirm(`确定要删除请假申请"${row.title}"吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    await apiConfig.delete(row.id)
-    ElMessage.success('删除成功')
-    crudRef.value?.refresh()
-  }).catch(() => {})
-}
-
 // 分页大小变化
 const handleSizeChange = (size) => {
   console.log('每页条数变化:', size)
@@ -616,8 +573,8 @@ const handleCurrentChange = (page) => {
   console.log('当前页变化:', page)
 }
 
-// 提交表单
-const handleSubmit = async () => {
+// 对话框确认提交
+const handleDialogConfirm = async () => {
   const valid = await formRef.value?.validate()
   if (valid) {
     const now = new Date()
@@ -633,6 +590,11 @@ const handleSubmit = async () => {
     dialogVisible.value = false
     crudRef.value?.refresh()
   }
+}
+
+// 提交表单（Dialog组件回调）
+const handleSubmit = async () => {
+  await handleDialogConfirm()
 }
 
 // 关闭对话框

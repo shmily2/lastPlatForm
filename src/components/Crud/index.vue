@@ -34,6 +34,7 @@
                 v-model="searchForm[field.prop]"
                 :placeholder="field.placeholder || `请选择${field.label}`"
                 clearable
+                filterable
                 style="width: 100%"
               >
                 <el-option
@@ -74,13 +75,16 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :span="24" class="search-buttons">
-            <el-button type="primary" :icon="Search" @click="handleSearch">
-              搜索
-            </el-button>
-            <el-button :icon="Refresh" @click="handleReset">
-              重置
-            </el-button>
+          <!-- 搜索重置按钮自动适应在同一行 -->
+          <el-col :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
+            <el-form-item>
+              <el-button type="primary" :icon="Search" @click="handleSearch">
+                搜索
+              </el-button>
+              <el-button :icon="Refresh" @click="handleReset">
+                重置
+              </el-button>
+            </el-form-item>
           </el-col>
         </el-row>
       </el-form>

@@ -281,7 +281,6 @@ defineExpose({
 </script>
 <style>
 .custom-dialog .el-dialog__body {
-  padding: 20px;
   max-height: 70vh;
   overflow-y: auto;
   overflow-x: visible;

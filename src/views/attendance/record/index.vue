@@ -1,574 +1,390 @@
 <template>
-  <div class="attendance-record-page">
-    <Crud
-      ref="crudRef"
-      :search-fields="searchFields"
-      :table-columns="tableColumns"
-      :show-index="true"
-      :show-actions="true"
-      :action-width="220"
-      :action-min-width="200"
-      :table-actions="{ view: true, edit: true, delete: true }"
-      :actions="{ add: false, batchDelete: false, export: true, refresh: true }"
-      :page-sizes="[10, 20, 30, 50]"
-      :api="apiConfig"
-      :show-search="true"
-      @search="handleSearch"
-      @refresh="handleRefresh"
-      @export="handleExport"
-      @view="handleView"
-      @edit="handleEdit"
-      @delete="handleDelete"
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-    >
-      <!-- 自定义操作列 -->
-      <template #actions="{ row }">
-        <el-button type="primary" link @click="handleView(row)">查看</el-button>
-        <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-        <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
-      </template>
-    </Crud>
+  <div class="attendance-statistics-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <h2 class="page-title">学生打卡 / 打卡统计</h2>
+    </div>
 
-    <!-- 查看/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="800px"
-      @close="handleDialogClose"
-    >
-      <BaseForm
-        ref="formRef"
-        v-model="formData"
-        :fields="formFields"
-        :rules="formRules"
-        :disabled="dialogMode === 'view'"
-        :show-buttons="false"
-      />
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button v-if="dialogMode !== 'view'" type="primary" @click="handleSubmit">确定</el-button>
+    <!-- 筛选条件区 -->
+    <el-card class="filter-card">
+      <div class="filter-content">
+        <div class="filter-item">
+          <span class="filter-label">组织架构：</span>
+          <el-select
+            v-model="filters.organization"
+            placeholder="请选择组织架构"
+            clearable
+            style="width: 200px"
+          >
+            <el-option label="全部" value="" />
+            <el-option label="护理系" value="nursing" />
+            <el-option label="临床系" value="clinical" />
+            <el-option label="康复系" value="rehabilitation" />
+          </el-select>
+        </div>
+
+        <div class="filter-item">
+          <span class="filter-label">打卡日期：</span>
+          <el-date-picker
+            v-model="filters.dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            clearable
+            style="width: 300px"
+          />
+        </div>
+
+        <el-button type="primary" :icon="Search" @click="handleQuery">
+          查询
+        </el-button>
+      </div>
+    </el-card>
+
+    <!-- 图表区域 -->
+    <el-card class="chart-card">
+      <template #header>
+        <div class="card-header">
+          <span class="chart-title">班级/小组打卡率(%)</span>
+          <el-button v-if="viewMode === 'chart'" type="primary" text @click="viewMode = 'table'">
+            表格查看
+          </el-button>
+          <el-button v-else type="primary" text @click="viewMode = 'chart'">
+            图表查看
+          </el-button>
+        </div>
       </template>
-    </el-dialog>
+
+      <!-- 图表视图 -->
+      <div v-show="viewMode === 'chart'" class="chart-container">
+        <div ref="chartRef" class="chart" style="width: 100%; height: 100%"></div>
+      </div>
+
+      <!-- 表格视图 -->
+      <div v-show="viewMode === 'table'" class="table-container">
+        <el-table :data="chartData" border stripe>
+          <el-table-column type="index" label="序号" width="80" align="center" />
+          <el-table-column prop="className" label="班级/小组" min-width="150" />
+          <el-table-column prop="rate" label="打卡率(%)" min-width="150">
+            <template #default="{ row }">
+              <el-progress
+                :percentage="row.rate"
+                :color="getProgressColor(row.rate)"
+                :stroke-width="8"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="total" label="总人数" width="100" align="center" />
+          <el-table-column prop="clocked" label="已打卡" width="100" align="center" />
+          <el-table-column prop="unclocked" label="未打卡" width="100" align="center" />
+        </el-table>
+      </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import Crud from '@/components/Crud/index.vue'
-import BaseForm from '@/components/Form/index.vue'
+import { ref, reactive, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
+import { Search } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
 
-// 学生数据
-const students = [
-  { id: 1, studentNo: '224102131', name: '阮文欣', className: '护理2201', department: '护理系' },
-  { id: 2, studentNo: '224102141', name: '江焮漪', className: '护理2201', department: '护理系' },
-  { id: 3, studentNo: '224102121', name: '王佳璐', className: '护理2201', department: '护理系' },
-  { id: 4, studentNo: '224102151', name: '赵佳羽', className: '护理2202', department: '护理系' },
-  { id: 5, studentNo: '224102161', name: '李妍辰', className: '护理2202', department: '护理系' },
-  { id: 6, studentNo: '224102171', name: '梁雨露', className: '护理2203', department: '护理系' },
-  { id: 7, studentNo: '224102181', name: '林欣', className: '护理2203', department: '护理系' },
-  { id: 8, studentNo: '224102191', name: '李慧珍', className: '护理2203', department: '护理系' }
-]
+// 视图模式
+const viewMode = ref('chart')
 
-// 班级数据
-const classes = [
-  '护理2201',
-  '护理2202',
-  '护理2203',
-  '护理2204',
-  '护理2205',
-  '临床2201',
-  '临床2202'
-]
-
-// 实习企业数据
-const companies = [
-  { name: '南京市浦口医院', address: '南京市浦口区浦园路18号' },
-  { name: '南京市中西医结合医院', address: '南京市玄武区孝陵卫179号' },
-  { name: '东南大学附属中大医院', address: '南京市鼓楼区丁家桥87号' },
-  { name: '江苏省中西医结合医院', address: '南京市玄武区孝陵卫18号' },
-  { name: '泰康仙林鼓楼医院有限公司', address: '南京市栖霞区仙林新村200号' },
-  { name: '市妇幼丁家庄院区', address: '南京市栖霞区丁家庄' },
-  { name: '南京明基医院有限公司', address: '南京市建邺区河西大街71号' },
-  { name: '中国人民解放军东部战区总医院', address: '南京市玄武区中山东路305号' },
-  { name: '江苏省省级机关医院', address: '南京市鼓楼区江苏路65号' },
-  { name: '南京市六合区中医院', address: '南京市六合区雄州东路288号' },
-  { name: '南京市中医院', address: '南京市秦淮区金陵路1号' }
-]
-
-// Mock API 配置
-const apiConfig = {
-  list: (params) => {
-    console.log('apiConfig.list 被调用，参数:', params)
-    const pageSize = params.pageSize || 20
-    const page = params.page || 1
-
-    // 模拟打卡数据
-    const mockData = [
-      {
-        id: 1,
-        studentNo: '224102131',
-        studentName: '阮文欣',
-        className: '护理2201',
-        department: '护理系',
-        companyName: '南京市浦口医院',
-        companyAddress: '南京市浦口区浦园路18号',
-        clockInAddress: '南京市浦口区浦园路18号A栋301室',
-        clockInTime: '2025-03-10 08:25:30',
-        status: 'normal'
-      },
-      {
-        id: 2,
-        studentNo: '224102141',
-        studentName: '江焮漪',
-        className: '护理2201',
-        department: '护理系',
-        companyName: '南京市中西医结合医院',
-        companyAddress: '南京市玄武区孝陵卫179号',
-        clockInAddress: '南京市玄武区孝陵卫179号门诊部',
-        clockInTime: '2025-03-10 08:32:15',
-        status: 'normal'
-      },
-      {
-        id: 3,
-        studentNo: '224102121',
-        studentName: '王佳璐',
-        className: '护理2201',
-        department: '护理系',
-        companyName: '东南大学附属中大医院',
-        companyAddress: '南京市鼓楼区丁家桥87号',
-        clockInAddress: '南京市鼓楼区丁家桥87号住院部',
-        clockInTime: '2025-03-10 08:45:00',
-        status: 'late'
-      },
-      {
-        id: 4,
-        studentNo: '224102151',
-        studentName: '赵佳羽',
-        className: '护理2202',
-        department: '护理系',
-        companyName: '江苏省中西医结合医院',
-        companyAddress: '南京市玄武区孝陵卫18号',
-        clockInAddress: '南京市玄武区孝陵卫18号急诊科',
-        clockInTime: '2025-03-10 09:05:20',
-        status: 'late'
-      },
-      {
-        id: 5,
-        studentNo: '224102161',
-        studentName: '李妍辰',
-        className: '护理2202',
-        department: '护理系',
-        companyName: '泰康仙林鼓楼医院有限公司',
-        companyAddress: '南京市栖霞区仙林新村200号',
-        clockInAddress: '南京市栖霞区仙林新村200号B区',
-        clockInTime: '2025-03-10 08:15:45',
-        status: 'normal'
-      },
-      {
-        id: 6,
-        studentNo: '224102171',
-        studentName: '梁雨露',
-        className: '护理2203',
-        department: '护理系',
-        companyName: '市妇幼丁家庄院区',
-        companyAddress: '南京市栖霞区丁家庄',
-        clockInAddress: '南京市栖霞区丁家庄住院楼',
-        clockInTime: '2025-03-10 17:30:00',
-        status: 'early'
-      },
-      {
-        id: 7,
-        studentNo: '224102181',
-        studentName: '林欣',
-        className: '护理2203',
-        department: '护理系',
-        companyName: '南京明基医院有限公司',
-        companyAddress: '南京市建邺区河西大街71号',
-        clockInAddress: '南京市建邺区河西大街71号门诊',
-        clockInTime: '2025-03-10 08:00:00',
-        status: 'normal'
-      },
-      {
-        id: 8,
-        studentNo: '224102191',
-        studentName: '李慧珍',
-        className: '护理2203',
-        department: '护理系',
-        companyName: '中国人民解放军东部战区总医院',
-        companyAddress: '南京市玄武区中山东路305号',
-        clockInAddress: '',
-        clockInTime: '2025-03-10 08:00:00',
-        status: 'absent'
-      },
-      {
-        id: 9,
-        studentNo: '224102201',
-        studentName: '何宇豪',
-        className: '护理2201',
-        department: '护理系',
-        companyName: '江苏省省级机关医院',
-        companyAddress: '南京市鼓楼区江苏路65号',
-        clockInAddress: '南京市鼓楼区江苏路65号病房',
-        clockInTime: '2025-03-10 08:20:10',
-        status: 'normal'
-      },
-      {
-        id: 10,
-        studentNo: '224102211',
-        studentName: '谢雅',
-        className: '护理2202',
-        department: '护理系',
-        companyName: '南京市六合区中医院',
-        companyAddress: '南京市六合区雄州东路288号',
-        clockInAddress: '南京市六合区雄州东路288号',
-        clockInTime: '2025-03-10 08:35:50',
-        status: 'normal'
-      },
-      {
-        id: 11,
-        studentNo: '224102221',
-        studentName: '侯欣妍',
-        className: '护理2204',
-        department: '护理系',
-        companyName: '南京市中医院',
-        companyAddress: '南京市秦淮区金陵路1号',
-        clockInAddress: '南京市秦淮区金陵路1号',
-        clockInTime: '2025-03-10 08:40:20',
-        status: 'normal'
-      },
-      {
-        id: 12,
-        studentNo: '224102231',
-        studentName: '张颖',
-        className: '护理2205',
-        department: '护理系',
-        companyName: '南京市浦口医院',
-        companyAddress: '南京市浦口区浦园路18号',
-        clockInAddress: '南京市浦口区浦园路18号',
-        clockInTime: '2025-03-10 09:10:00',
-        status: 'late'
-      }
-    ]
-
-    // 分页处理
-    const start = (page - 1) * pageSize
-    const end = start + pageSize
-    const data = mockData.slice(start, end)
-
-    console.log('返回数据:', data.length, '条')
-    return Promise.resolve({
-      data: {
-        list: data,
-        total: mockData.length
-      }
-    })
-  },
-  update: (data) => {
-    console.log('修改打卡记录:', data)
-    return Promise.resolve({ code: 200, message: '修改成功' })
-  },
-  delete: (id) => {
-    console.log('删除打卡记录:', id)
-    return Promise.resolve({ code: 200, message: '删除成功' })
-  }
-}
-
-// 搜索字段配置
-const searchFields = [
-  {
-    prop: 'className',
-    label: '请选择班级/科室',
-    type: 'select',
-    placeholder: '请选择班级/科室',
-    options: classes.map(c => ({ label: c, value: c })),
-    span: 4
-  },
-  {
-    prop: 'studentName',
-    label: '学生姓名',
-    type: 'select',
-    placeholder: '请选择学生',
-    options: students.map(s => ({ label: s.name, value: s.name })),
-    span: 4
-  },
-  {
-    prop: 'keyword',
-    label: '请输入关键字',
-    type: 'input',
-    placeholder: '请输入关键字',
-    span: 4
-  },
-  {
-    prop: 'date',
-    label: '打卡日期',
-    type: 'date',
-    placeholder: '选择打卡日期',
-    span: 4
-  },
-  {
-    prop: 'status',
-    label: '打卡状态',
-    type: 'select',
-    placeholder: '全部',
-    options: [
-      { label: '全部', value: '' },
-      { label: '正常', value: 'normal' },
-      { label: '迟到', value: 'late' },
-      { label: '早退', value: 'early' },
-      { label: '缺卡', value: 'absent' }
-    ],
-    span: 4
-  }
-]
-
-// 表格列配置
-const tableColumns = [
-  { prop: 'studentNo', label: '学号', minWidth: 110 },
-  { prop: 'studentName', label: '学生姓名', minWidth: 90 },
-  { prop: 'className', label: '所在班级', minWidth: 110 },
-  { prop: 'department', label: '系部', minWidth: 100 },
-  { prop: 'companyName', label: '实习企业', minWidth: 180 },
-  { prop: 'companyAddress', label: '企业地址', minWidth: 200 },
-  { prop: 'clockInAddress', label: '打卡地址', minWidth: 200 },
-  { prop: 'clockInTime', label: '打卡时间', width: 160 },
-  {
-    prop: 'status',
-    label: '打卡状态',
-    width: 90,
-    tag: true,
-    tagType: (value) => {
-      const typeMap = {
-        normal: 'success',
-        late: 'warning',
-        early: 'warning',
-        absent: 'danger'
-      }
-      return typeMap[value] || ''
-    },
-    formatter: (value) => {
-      const labelMap = {
-        normal: '正常',
-        late: '迟到',
-        early: '早退',
-        absent: '缺卡'
-      }
-      return labelMap[value] || '-'
-    }
-  }
-]
-
-// 表单字段配置
-const formFields = [
-  {
-    prop: 'studentNo',
-    label: '学号',
-    type: 'input',
-    required: true,
-    placeholder: '请输入学号',
-    disabled: true,
-    span: 12
-  },
-  {
-    prop: 'studentName',
-    label: '学生姓名',
-    type: 'input',
-    required: true,
-    placeholder: '请输入学生姓名',
-    span: 12
-  },
-  {
-    prop: 'className',
-    label: '所在班级',
-    type: 'select',
-    required: true,
-    placeholder: '请选择班级',
-    span: 12,
-    options: classes.map(c => ({ label: c, value: c }))
-  },
-  {
-    prop: 'department',
-    label: '系部',
-    type: 'input',
-    required: true,
-    placeholder: '请输入系部',
-    span: 12
-  },
-  {
-    prop: 'companyName',
-    label: '实习企业',
-    type: 'select',
-    required: true,
-    placeholder: '请选择实习企业',
-    span: 24,
-    options: companies.map(c => ({ label: c.name, value: c.name }))
-  },
-  {
-    prop: 'companyAddress',
-    label: '企业地址',
-    type: 'input',
-    placeholder: '请输入企业地址',
-    disabled: true,
-    span: 24
-  },
-  {
-    prop: 'clockInAddress',
-    label: '打卡地址',
-    type: 'input',
-    required: true,
-    placeholder: '请输入打卡地址',
-    span: 12
-  },
-  {
-    prop: 'clockInTime',
-    label: '打卡时间',
-    type: 'datetime',
-    required: true,
-    placeholder: '请选择打卡时间',
-    span: 12
-  },
-  {
-    prop: 'status',
-    label: '打卡状态',
-    type: 'select',
-    required: true,
-    placeholder: '请选择打卡状态',
-    span: 12,
-    options: [
-      { label: '正常', value: 'normal' },
-      { label: '迟到', value: 'late' },
-      { label: '早退', value: 'early' },
-      { label: '缺卡', value: 'absent' }
-    ]
-  }
-]
-
-// 表单验证规则
-const formRules = {
-  studentNo: [
-    { required: true, message: '请输入学号', trigger: 'blur' }
-  ],
-  studentName: [
-    { required: true, message: '请输入学生姓名', trigger: 'blur' }
-  ],
-  className: [
-    { required: true, message: '请选择班级', trigger: 'change' }
-  ],
-  department: [
-    { required: true, message: '请输入系部', trigger: 'blur' }
-  ],
-  companyName: [
-    { required: true, message: '请选择实习企业', trigger: 'change' }
-  ],
-  clockInAddress: [
-    { required: true, message: '请输入打卡地址', trigger: 'blur' }
-  ],
-  clockInTime: [
-    { required: true, message: '请选择打卡时间', trigger: 'change' }
-  ],
-  status: [
-    { required: true, message: '请选择打卡状态', trigger: 'change' }
-  ]
-}
-
-// Crud 组件引用
-const crudRef = ref()
-const formRef = ref()
-
-// 对话框
-const dialogVisible = ref(false)
-const dialogTitle = ref('查看打卡记录')
-const dialogMode = ref('view')
-
-// 表单数据
-const formData = reactive({
-  id: null,
-  studentNo: '',
-  studentName: '',
-  className: '',
-  department: '',
-  companyName: '',
-  companyAddress: '',
-  clockInAddress: '',
-  clockInTime: '',
-  status: 'normal'
+// 筛选条件
+const filters = reactive({
+  organization: '',
+  dateRange: ['2026-03-10', '2026-03-10']
 })
 
-// 搜索
-const handleSearch = (params) => {
-  console.log('搜索参数:', params)
-}
+// 模拟数据
+const chartData = ref([
+  { className: '2020级护理1班', rate: 8, total: 45, clocked: 4, unclocked: 41 },
+  { className: '临床2021级', rate: 5, total: 50, clocked: 3, unclocked: 47 },
+  { className: '康复2021级', rate: 7, total: 40, clocked: 3, unclocked: 37 },
+  { className: '康复2022级', rate: 6, total: 42, clocked: 3, unclocked: 39 },
+  { className: '护理2021级', rate: 9, total: 48, clocked: 4, unclocked: 44 },
+  { className: '护理2022级', rate: 4, total: 46, clocked: 2, unclocked: 44 },
+  { className: '护理2023级', rate: 8, total: 50, clocked: 4, unclocked: 46 },
+  { className: '护理2024级', rate: 6, total: 44, clocked: 3, unclocked: 41 },
+  { className: '护理2025级', rate: 5, total: 47, clocked: 2, unclocked: 45 },
+  { className: '护理2026级', rate: 7, total: 45, clocked: 3, unclocked: 42 },
+  { className: '护理2027级', rate: 4, total: 48, clocked: 2, unclocked: 46 },
+  { className: '护理2028级', rate: 6, total: 43, clocked: 3, unclocked: 40 },
+  { className: '护理2029级', rate: 5, total: 46, clocked: 2, unclocked: 44 },
+  { className: '护理2030级', rate: 8, total: 49, clocked: 4, unclocked: 45 },
+  { className: '护理2031级', rate: 7, total: 44, clocked: 3, unclocked: 41 },
+  { className: '护理2032级', rate: 6, total: 47, clocked: 3, unclocked: 44 },
+  { className: '护理2033级', rate: 5, total: 45, clocked: 2, unclocked: 43 },
+  { className: '护理2034级', rate: 4, total: 48, clocked: 2, unclocked: 46 },
+  { className: '护理2035级', rate: 7, total: 46, clocked: 3, unclocked: 43 },
+  { className: '护理2036级', rate: 6, total: 50, clocked: 3, unclocked: 47 }
+])
 
-// 刷新
-const handleRefresh = () => {
-  console.log('刷新列表')
-  crudRef.value?.refresh()
-}
+// 图表引用
+const chartRef = ref()
+let chartInstance = null
 
-// 导出
-const handleExport = () => {
-  ElMessage.success('导出打卡记录成功')
-}
+// 初始化图表
+const initChart = () => {
+  if (!chartRef.value) return
 
-// 查看
-const handleView = (row) => {
-  dialogMode.value = 'view'
-  dialogTitle.value = '查看打卡记录'
-  Object.assign(formData, row)
-  dialogVisible.value = true
-}
-
-// 编辑
-const handleEdit = (row) => {
-  dialogMode.value = 'edit'
-  dialogTitle.value = '编辑打卡记录'
-  Object.assign(formData, row)
-  dialogVisible.value = true
-}
-
-// 删除
-const handleDelete = (row) => {
-  ElMessageBox.confirm(`确定要删除学生"${row.studentName}"的打卡记录吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(async () => {
-    await apiConfig.delete(row.id)
-    ElMessage.success('删除成功')
-    crudRef.value?.refresh()
-  }).catch(() => {})
-}
-
-// 分页大小变化
-const handleSizeChange = (size) => {
-  console.log('每页条数变化:', size)
-}
-
-// 当前页变化
-const handleCurrentChange = (page) => {
-  console.log('当前页变化:', page)
-}
-
-// 提交表单
-const handleSubmit = async () => {
-  const valid = await formRef.value?.validate()
-  if (valid) {
-    await apiConfig.update(formData)
-    ElMessage.success('修改成功')
-    dialogVisible.value = false
-    crudRef.value?.refresh()
+  if (chartInstance) {
+    chartInstance.dispose()
   }
+
+  chartInstance = echarts.init(chartRef.value)
+
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow'
+      },
+      formatter: '{b}: {c}%'
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      top: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      data: chartData.value.map(item => item.className),
+      axisLabel: {
+        interval: 0,
+        rotate: 30,
+        fontSize: 11
+      },
+      axisLine: {
+        show: false
+      },
+      axisTick: {
+        show: false
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: '打卡率(%)',
+      nameLocation: 'center',
+      nameGap: 40,
+      min: 0,
+      max: 10,
+      interval: 1,
+      axisLabel: {
+        formatter: '{value}%'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#EBEEF5'
+        }
+      }
+    },
+    series: [
+      {
+        name: '打卡率',
+        type: 'bar',
+        data: chartData.value.map(item => item.rate),
+        barWidth: '40%',
+        itemStyle: {
+          color: '#909399',
+          borderRadius: [4, 4, 0, 0]
+        },
+        emphasis: {
+          itemStyle: {
+            color: '#409eff'
+          }
+        },
+        label: {
+          show: true,
+          position: 'top',
+          offset: [-5, -10],
+          formatter: '{c}%',
+          color: '#606266',
+          fontSize: 12,
+          fontWeight: 'bold'
+        }
+      }
+    ]
+  }
+
+  chartInstance.setOption(option)
 }
 
-// 关闭对话框
-const handleDialogClose = () => {
-  formRef.value?.clearValidate()
+// 获取进度条颜色
+const getProgressColor = (rate) => {
+  if (rate >= 80) return '#67c23a'
+  if (rate >= 60) return '#409eff'
+  if (rate >= 40) return '#e6a23c'
+  return '#f56c6c'
 }
+
+// 查询
+const handleQuery = () => {
+  ElMessage.success('查询成功')
+  // 这里可以根据筛选条件重新加载数据
+}
+
+// 窗口大小变化处理
+const handleResize = () => {
+  chartInstance?.resize()
+}
+
+// 组件挂载后初始化图表
+onMounted(() => {
+  nextTick(() => {
+    initChart()
+  })
+
+  // 窗口大小变化时重新渲染图表
+  window.addEventListener('resize', handleResize)
+})
+
+// 组件卸载前清理
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
+  if (chartInstance) {
+    chartInstance.dispose()
+    chartInstance = null
+  }
+})
+
+// 监听视图模式变化
+watch(viewMode, (newVal) => {
+  if (newVal === 'chart') {
+    nextTick(() => {
+      initChart()
+      // 延迟调用 resize 确保容器高度已计算
+      setTimeout(() => {
+        chartInstance?.resize()
+      }, 100)
+    })
+  }
+})
+
+// 监听数据变化
+watch(chartData, () => {
+  if (viewMode.value === 'chart' && chartInstance) {
+    chartInstance.setOption({
+      yAxis: {
+        data: chartData.value.map(item => item.className)
+      },
+      series: [
+        {
+          data: chartData.value.map(item => item.rate)
+        }
+      ]
+    })
+  }
+}, { deep: true })
 </script>
 
 <style scoped>
-.attendance-record-page {
-  min-height: 500px;
+.attendance-statistics-page {
+  padding: 10px;
+  background: #f5f7fa;
+  min-height: calc(100vh - 84px);
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0;
+}
+
+.filter-card {
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.filter-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #606266;
+  white-space: nowrap;
+}
+
+.chart-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+
+.chart-card :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.chart-container {
+  flex: 1;
+  padding: 20px 0;
+  min-height: 0;
+}
+
+.chart-container .chart {
+  width: 100%;
+  min-height: 300px;
+  height: 100%;
+}
+
+.table-container {
+  flex: 1;
+  padding: 10px 0;
+  overflow: auto;
+  height:100%;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .filter-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-item {
+    width: 100%;
+  }
+
+  .filter-item span,
+  .filter-item .el-select,
+  .filter-item .el-date-picker {
+    width: 100% !important;
+  }
 }
 </style>

@@ -48,15 +48,18 @@
       <template #header>
         <div class="card-header">
           <span class="chart-title">班级/小组打卡率(%)</span>
-          <el-button type="primary" text @click="viewMode = 'table'">
+          <el-button v-if="viewMode === 'chart'" type="primary" text @click="viewMode = 'table'">
             表格查看
+          </el-button>
+          <el-button v-else type="primary" text @click="viewMode = 'chart'">
+            图表查看
           </el-button>
         </div>
       </template>
 
       <!-- 图表视图 -->
       <div v-show="viewMode === 'chart'" class="chart-container">
-        <div ref="chartRef" class="chart" style="width: 100%; height: 600px"></div>
+        <div ref="chartRef" class="chart" style="width: 100%; height: 100%"></div>
       </div>
 
       <!-- 表格视图 -->
@@ -266,6 +269,9 @@ watch(viewMode, (newVal) => {
   if (newVal === 'chart') {
     nextTick(() => {
       initChart()
+      setTimeout(() => {
+        chartInstance?.resize()
+      }, 100)
     })
   }
 })
@@ -292,6 +298,8 @@ watch(rankingData, () => {
   padding: 10px;
   background: #f5f7fa;
   min-height: calc(100vh - 84px);
+  display: flex;
+  flex-direction: column;
 }
 
 .page-header {
@@ -306,7 +314,8 @@ watch(rankingData, () => {
 }
 
 .filter-card {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .filter-content {
@@ -327,7 +336,16 @@ watch(rankingData, () => {
 }
 
 .chart-card {
-  min-height: 700px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+
+.chart-card :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-header {
@@ -343,11 +361,21 @@ watch(rankingData, () => {
 }
 
 .chart-container {
+  flex: 1;
   padding: 20px 0;
+  min-height: 0;
+}
+
+.chart-container .chart {
+  width: 100%;
+  min-height: 300px;
+  height: 100%;
 }
 
 .table-container {
+  flex: 1;
   padding: 10px 0;
+  overflow: auto;
 }
 
 /* 响应式 */
