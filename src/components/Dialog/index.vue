@@ -32,6 +32,7 @@
         :label-width="formLabelWidth"
         :show-buttons="false"
         :view-mode="viewMode"
+        :disabled="disabled"
       />
     </slot>
 
@@ -54,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import BaseForm from '../Form/index.vue'
 
 const props = defineProps({
@@ -167,6 +168,11 @@ const props = defineProps({
   viewMode: {
     type: Boolean,
     default: false
+  },
+  // 是否禁用表单
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -217,6 +223,13 @@ const handleBeforeClose = (done) => {
 
 // 打开动画开始时的回调
 const handleOpen = () => {
+  // 重置弹框滚动位置
+  nextTick(() => {
+    const dialogBody = document.querySelector('.custom-dialog .el-dialog__body')
+    if (dialogBody) {
+      dialogBody.scrollTop = 0
+    }
+  })
   emit('open')
 }
 

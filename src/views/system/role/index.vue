@@ -42,36 +42,41 @@ const searchFields = [
 // 表单字段
 const formFields = [
   {
-    prop: 'roleName',
-    label: '角色名称',
-    type: 'input',
-    required: true,
-    span: 12
-  },
-  {
-    prop: 'roleKey',
-    label: '角色标识',
-    type: 'input',
-    required: true,
-    span: 12
-  },
-  {
-    prop: 'status',
-    label: '状态',
-    type: 'radio',
-    required: true,
-    span: 12,
-    options: [
-      { label: '启用', value: '1' },
-      { label: '禁用', value: '0' }
+    title: '角色信息',
+    fields: [
+      {
+        prop: 'roleName',
+        label: '角色名称',
+        type: 'input',
+        required: true,
+        span: 12
+      },
+      {
+        prop: 'roleKey',
+        label: '角色标识',
+        type: 'input',
+        required: true,
+        span: 12
+      },
+      {
+        prop: 'status',
+        label: '状态',
+        type: 'radio',
+        required: true,
+        span: 12,
+        options: [
+          { label: '启用', value: '1' },
+          { label: '禁用', value: '0' }
+        ]
+      },
+      {
+        prop: 'remark',
+        label: '备注',
+        type: 'textarea',
+        span: 24,
+        rows: 3
+      }
     ]
-  },
-  {
-    prop: 'remark',
-    label: '备注',
-    type: 'textarea',
-    span: 24,
-    rows: 3
   }
 ]
 

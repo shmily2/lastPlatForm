@@ -68,74 +68,79 @@ const tableActions = {
 // 表单字段
 const formFields = [
   {
-    prop: 'title',
-    label: '菜单名称',
-    type: 'input',
-    required: true,
-    span: 12
-  },
-  {
-    prop: 'icon',
-    label: '图标',
-    type: 'input',
-    span: 12
-  },
-  {
-    prop: 'path',
-    label: '路径',
-    type: 'input',
-    required: true,
-    span: 12
-  },
-  {
-    prop: 'component',
-    label: '组件',
-    type: 'input',
-    span: 12
-  },
-  {
-    prop: 'status',
-    label: '状态',
-    type: 'radio',
-    required: true,
-    span: 12,
-    options: [
-      { label: '启用', value: '1' },
-      { label: '禁用', value: '0' }
+    title: '菜单信息',
+    fields: [
+      {
+        prop: 'title',
+        label: '菜单名称',
+        type: 'input',
+        required: true,
+        span: 12
+      },
+      {
+        prop: 'icon',
+        label: '图标',
+        type: 'input',
+        span: 12
+      },
+      {
+        prop: 'path',
+        label: '路径',
+        type: 'input',
+        required: true,
+        span: 12
+      },
+      {
+        prop: 'component',
+        label: '组件',
+        type: 'input',
+        span: 12
+      },
+      {
+        prop: 'status',
+        label: '状态',
+        type: 'radio',
+        required: true,
+        span: 12,
+        options: [
+          { label: '启用', value: '1' },
+          { label: '禁用', value: '0' }
+        ]
+      },
+      {
+        prop: 'hidden',
+        label: '是否隐藏',
+        type: 'radio',
+        span: 12,
+        options: [
+          { label: '显示', value: false },
+          { label: '隐藏', value: true }
+        ]
+      },
+      {
+        prop: 'sort',
+        label: '排序',
+        type: 'number',
+        span: 12
+      },
+      {
+        prop: 'parentId',
+        label: '父菜单',
+        type: 'select',
+        span: 12,
+        options: [
+          { label: '系统管理', value: 1 },
+          { label: '业务管理', value: 2 }
+        ]
+      },
+      {
+        prop: 'remark',
+        label: '备注',
+        type: 'textarea',
+        span: 24,
+        rows: 3
+      }
     ]
-  },
-  {
-    prop: 'hidden',
-    label: '是否隐藏',
-    type: 'radio',
-    span: 12,
-    options: [
-      { label: '显示', value: false },
-      { label: '隐藏', value: true }
-    ]
-  },
-  {
-    prop: 'sort',
-    label: '排序',
-    type: 'number',
-    span: 12
-  },
-  {
-    prop: 'parentId',
-    label: '父菜单',
-    type: 'select',
-    span: 12,
-    options: [
-      { label: '系统管理', value: 1 },
-      { label: '业务管理', value: 2 }
-    ]
-  },
-  {
-    prop: 'remark',
-    label: '备注',
-    type: 'textarea',
-    span: 24,
-    rows: 3
   }
 ]
 

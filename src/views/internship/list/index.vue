@@ -45,15 +45,35 @@
       :title="dialogTitle"
       width="900px"
       :show-footer="!isView"
-      :show-form="true"
-      :form-fields="allFields"
-      :form-rules="formRules"
+      :show-form="false"
       :form-data="formData"
       :view-mode="isView"
       @update:form-data="formData = $event"
       @close="handleDialogClose"
       @confirm="handleSubmit"
-    />
+    >
+      <!-- 自定义对话框内容：标签页 -->
+      <el-tabs v-model="activeTab" class="internship-tabs" @tab-click="handleTabClick">
+        <el-tab-pane
+          v-for="tab in formData.tabs"
+          :key="tab.name"
+          :label="tab.label"
+          :name="tab.name"
+        >
+          <BaseForm
+            :gutter="0"
+            :model-value="formData"
+            @update:model-value="formData = $event"
+            :fields="allFields"
+            :rules="formRules"
+            label-width="120px"
+            :show-buttons="false"
+            :view-mode="isView"
+            :disabled="isView"
+          />
+        </el-tab-pane>
+      </el-tabs>
+    </Dialog>
   </div>
 </template>
 
@@ -64,6 +84,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import Crud from '@/components/Crud/index.vue'
 import Dialog from '@/components/Dialog/index.vue'
+import BaseForm from '@/components/Form/index.vue'
 
 // Mock API 配置
 const apiConfig = {
@@ -96,7 +117,36 @@ const apiConfig = {
       endDate: '2026-12-13',
       submitTime: '2026-03-09 15:16:54',
       auditStatus: auditStatuses[i % auditStatuses.length],
-      attachments: mockAttachments
+      attachments: mockAttachments,
+      // 动态生成标签页数据，每个tab对应不同的数据
+      tabs: [
+        { 
+          name: 'current', 
+          label: '实习详情2(审核通过-生效)', 
+          status: '审核通过-生效',
+          // 当前生效的详情数据
+          data: {
+            companyName: ['泰康仙林鼓楼医院有限公司', '东南大学附属中大医院', '南京鼓楼医院'][((page - 1) * pageSize + i) % 3],
+            startDate: '2026-03-16',
+            endDate: '2026-12-13',
+            teacherName: ['刘老师', '陈老师', '杨老师'][((page - 1) * pageSize + i) % 3],
+            department: '南丁格尔护理学院'
+          }
+        },
+        { 
+          name: 'history', 
+          label: '实习详情1(审核通过-已变更)', 
+          status: '审核通过-已变更',
+          // 历史变更的详情数据
+          data: {
+            companyName: ['南京军区总医院', '南京市第一医院', '江苏省人民医院'][((page - 1) * pageSize + i) % 3],
+            startDate: '2025-09-01',
+            endDate: '2026-02-28',
+            teacherName: ['张老师', '王老师', '李老师'][((page - 1) * pageSize + i) % 3],
+            department: '临床医学院'
+          }
+        }
+      ]
     }))
     console.log('返回数据:', data.length, '条')
     return Promise.resolve({
@@ -168,20 +218,37 @@ const searchFields = [
     label: '是否投保',
     type: 'select',
     options: [
-      { label: '全部', value: '' },
+      { label: '全部', value: 'all' },
       { label: '是', value: '1' },
       { label: '否', value: '0' }
     ],
     span: 6
   },
   {
-    prop: 'archived',
-    label: '是否存档',
+    prop: 'status',
+    label: '实习状态',
     type: 'select',
     options: [
-      { label: '全部', value: '' },
-      { label: '是', value: '1' },
-      { label: '否', value: '0' }
+      { label: '全部', value: 'all' },
+      { label: '实习', value: '1' },
+      { label: '参军', value: '2' },
+      { label: '升学/升本', value: '3' },
+      { label: '出国', value: '4' },
+      { label: '长病假', value: '5' },
+      { label: '实习结束', value: '6' }
+    ],
+    span: 6
+  },
+  {
+    prop: 'archived',
+    label: '状态待完善',
+    type: 'select',
+    options: [
+      { label: '全部', value: 'all' },
+      { label: '待完善', value: '1' },
+      { label: '待审核', value: '2' },
+      { label: '审核通过', value: '3' },
+      { label: '审核拒绝', value: '3' }
     ],
     span: 6
   }
@@ -354,6 +421,26 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('查看实习申请')
 const isView = ref(false)
 const dialogRef = ref()
+const activeTab = ref('current')
+
+// 点击tab时更新对应的数据
+const handleTabClick = (tab) => {
+  const targetTabName = tab.props.name
+  
+  // 先保存当前 tab 的数据
+  const currentTab = formData.tabs?.find(t => t.name === activeTab.value)
+  if (currentTab) {
+    // 保存表单中修改的字段到当前 tab
+    currentTab.data = { ...formData }
+  }
+  
+  // 切换到目标 tab
+  const targetTab = formData.tabs?.find(t => t.name === targetTabName)
+  if (targetTab?.data) {
+    // 将目标 tab 的数据合并到 formData
+    Object.assign(formData, targetTab.data)
+  }
+}
 
 // 获取表单引用
 const formRef = computed(() => dialogRef.value?.formRef)
@@ -491,10 +578,24 @@ const handleFilePreview = (file) => {
 
 // 查看
 const handleView = (row) => {
-  Object.assign(formData, row)
+  // 深拷贝数据，避免互相干扰
+  const rowData = JSON.parse(JSON.stringify(row))
+  // 为每个 tab 创建独立的数据副本
+  rowData.tabs = rowData.tabs?.map(tab => ({
+    ...tab,
+    data: { ...tab.data }
+  })) || []
+  
+  Object.assign(formData, rowData)
+  // 初始化第一个tab的数据
+  activeTab.value = 'current'
+  const firstTab = rowData.tabs?.[0]
+  if (firstTab?.data) {
+    Object.assign(formData, firstTab.data)
+  }
   // 拼接审核状态到标题
   if (row.auditStatus) {
-    dialogTitle.value = `查看实习申请（${row.auditStatus}）`
+    dialogTitle.value = `查看实习申请`
   } else {
     dialogTitle.value = '查看实习申请'
   }
@@ -581,6 +682,14 @@ const handleDialogClose = () => {
 </script>
 
 <style scoped>
-
-
+.internship-tabs {
+  padding: 0 10px;
+}
+.internship-tabs :deep(.el-tabs__item) {
+  font-size: 14px;
+}
+.internship-tabs :deep(.el-tabs__item.is-active) {
+  color: #409EFF;
+  font-weight: bold;
+}
 </style>

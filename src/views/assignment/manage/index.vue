@@ -147,100 +147,105 @@ const tableColumns = [
 // 表单字段配置
 const formFields = [
   {
-    prop: 'batchName',
-    label: '批次名称',
-    type: 'input',
-    required: true,
-    placeholder: '请输入批次名称',
-    span: 24
-  },
-  {
-    prop: 'batchNo',
-    label: '批次号',
-    type: 'input',
-    required: true,
-    placeholder: '请输入批次号',
-    span: 12
-  },
-  {
-    prop: 'academicYear',
-    label: '学年',
-    type: 'select',
-    required: true,
-    placeholder: '请选择学年',
-    span: 12,
-    options: [
-      { label: '2023-2024', value: '2023' },
-      { label: '2022-2023', value: '2022' },
-      { label: '2021-2022', value: '2021' },
-      { label: '2020-2021', value: '2020' }
+    title: '批次信息',
+    fields: [
+      {
+        prop: 'batchName',
+        label: '批次名称',
+        type: 'input',
+        required: true,
+        placeholder: '请输入批次名称',
+        span: 24
+      },
+      {
+        prop: 'batchNo',
+        label: '批次号',
+        type: 'input',
+        required: true,
+        placeholder: '请输入批次号',
+        span: 12
+      },
+      {
+        prop: 'academicYear',
+        label: '学年',
+        type: 'select',
+        required: true,
+        placeholder: '请选择学年',
+        span: 12,
+        options: [
+          { label: '2023-2024', value: '2023' },
+          { label: '2022-2023', value: '2022' },
+          { label: '2021-2022', value: '2021' },
+          { label: '2020-2021', value: '2020' }
+        ]
+      },
+      {
+        prop: 'internDateRange',
+        label: '实习起止时间',
+        type: 'daterange',
+        required: true,
+        placeholder: '请选择实习起止时间',
+        span: 24
+      },
+      {
+        prop: 'weeklyReportCount',
+        label: '要求提交周报数',
+        type: 'number',
+        required: true,
+        min: 0,
+        placeholder: '请输入要求提交周报数',
+        span: 12
+      },
+      {
+        prop: 'monthlyReportCount',
+        label: '要求提交月报数',
+        type: 'number',
+        required: true,
+        min: 0,
+        placeholder: '请输入要求提交月报数',
+        span: 12
+      },
+      {
+        prop: 'checkinCount',
+        label: '要求打卡数',
+        type: 'number',
+        required: true,
+        min: 0,
+        placeholder: '请输入要求打卡数',
+        span: 12
+      },
+      {
+        prop: 'monthlyVisitCount',
+        label: '每月要求巡防次数',
+        type: 'number',
+        required: true,
+        min: 0,
+        placeholder: '请输入每月要求巡防次数',
+        span: 12
+      },
+      {
+        prop: 'guideTeacher',
+        label: '指导老师',
+        type: 'input',
+        placeholder: '请输入指导老师',
+        span: 12
+      },
+      {
+        prop: 'teacherPhone',
+        label: '指导老师电话',
+        type: 'input',
+        placeholder: '请输入指导老师电话',
+        span: 12
+      },
+      {
+        prop: 'batchRemark',
+        label: '批次说明',
+        type: 'textarea',
+        placeholder: '请输入批次说明',
+        rows: 3,
+        span: 24
+      }
     ]
-  },
-  {
-    prop: 'internDateRange',
-    label: '实习起止时间',
-    type: 'daterange',
-    required: true,
-    placeholder: '请选择实习起止时间',
-    span: 24
-  },
-  {
-    prop: 'weeklyReportCount',
-    label: '要求提交周报数',
-    type: 'number',
-    required: true,
-    min: 0,
-    placeholder: '请输入要求提交周报数',
-    span: 12
-  },
-  {
-    prop: 'monthlyReportCount',
-    label: '要求提交月报数',
-    type: 'number',
-    required: true,
-    min: 0,
-    placeholder: '请输入要求提交月报数',
-    span: 12
-  },
-  {
-    prop: 'checkinCount',
-    label: '要求打卡数',
-    type: 'number',
-    required: true,
-    min: 0,
-    placeholder: '请输入要求打卡数',
-    span: 12
-  },
-  {
-    prop: 'monthlyVisitCount',
-    label: '每月要求巡防次数',
-    type: 'number',
-    required: true,
-    min: 0,
-    placeholder: '请输入每月要求巡防次数',
-    span: 12
-  },
-  {
-    prop: 'guideTeacher',
-    label: '指导老师',
-    type: 'input',
-    placeholder: '请输入指导老师',
-    span: 12
-  },
-  {
-    prop: 'teacherPhone',
-    label: '指导老师电话',
-    type: 'input',
-    placeholder: '请输入指导老师电话',
-    span: 12
-  },
-  {
-    prop: 'batchRemark',
-    label: '批次说明',
-    type: 'textarea',
-    placeholder: '请输入批次说明',
-    rows: 3,
-    span: 24
   }
 ]
 

@@ -36,15 +36,15 @@
 
       <!-- 自定义操作列 -->
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleView(row)">查看</el-button>
+        <el-button type="primary" link @click="handleView(row)">详情</el-button>
         <el-button v-if="row.status === '待审批'" type="success" link @click="handleApprove(row)">审批</el-button>
         <el-button v-if="row.status !== '待审批' && row.status !== '待提交'" type="warning" link @click="handleWithdraw(row)">撤回</el-button>
       </template>
 
       <!-- 自定义操作按钮 -->
       <template #extra-operations>
-        <el-button type="primary" @click="handleWrittenStats">已写周报统计</el-button>
-        <el-button type="warning" @click="handleUnwrittenStats">未写周报统计</el-button>
+        <el-button type="primary" @click="handleWrittenStats">已写月报统计</el-button>
+        <el-button type="warning" @click="handleUnwrittenStats">未写月报统计</el-button>
         <el-button type="success" @click="handleCompleteStats">完成数量统计</el-button>
       </template>
     </Crud>
@@ -96,6 +96,7 @@ const apiConfig = {
     ]
     const data = Array.from({ length: pageSize }, (_, i) => {
       // 增加"待审批"状态的概率
+      const statusList = ['待审批', '已通过', '已驳回', '待提交']
       const random = Math.random()
       // 40% 待审批，20% 已通过，10% 已驳回，30% 待提交
       let status
@@ -117,10 +118,10 @@ const apiConfig = {
         className: ['护理2201', '护理2202', '临床2201', '康复2201'][((page - 1) * pageSize + i) % 4],
         department: ['南丁格尔护理学院', '临床医学院', '康复医学院'][((page - 1) * pageSize + i) % 3],
         submitDate: isSubmitted ? `2026-03-${String(1 + i % 20).padStart(2, '0')}` : '-',
-        week: `第${11 + i}周`,
+        month: `2026年${1 + i % 12}月`,
         isSupplement: Math.random() > 0.8 ? '是' : '否',
-        content: '本周主要完成了护理岗位的基础技能培训，包括患者生命体征监测、护理记录填写、药品发放等内容。在带教老师的指导下，进行了静脉输液的实际操作练习。',
-        workPlan: '下周计划：1. 继续加强静脉输液操作练习；2. 学习患者健康宣教；3. 参与科室病例讨论。',
+        content: '本月主要完成了护理岗位的基础技能培训，包括患者生命体征监测、护理记录填写、药品发放等内容。在带教老师的指导下，进行了静脉输液的实际操作练习。',
+        workPlan: '下月计划：1. 继续加强静脉输液操作练习；2. 学习患者健康宣教；3. 参与科室病例讨论。',
         problems: '在静脉输液时有时难以一次穿刺成功，需要多加练习。',
         attachments: isSubmitted ? mockAttachments : [],
         approver: ['刘老师', '陈老师', '杨老师', '王老师'][((page - 1) * pageSize + i) % 4],
@@ -154,11 +155,12 @@ const searchFields = [
     span: 6
   },
   {
-    prop: 'week',
-    label: '周次',
-    type: 'select',
-    options: Array.from({ length: 20 }, (_, i) => ({ label: `2026 第${i + 1}周`, value: i + 1 })),
-    span: 6
+    prop: 'month',
+    label: '年月',
+    type: 'month',
+    placeholder: '请选择月份',
+    span: 6,
+    valueFormat: 'YYYY-MM'
   },
   {
     prop: 'studentName',
@@ -201,7 +203,7 @@ const tableColumns = [
   { prop: 'className', label: '所在班级', minWidth: 100, align: 'center' },
   { prop: 'department', label: '系部', minWidth: 120, align: 'center' },
   { prop: 'submitDate', label: '提交日期', width: 120, align: 'center' },
-  { prop: 'week', label: '周次', width: 100, align: 'center' },
+  { prop: 'month', label: '年月', width: 100, align: 'center' },
   {
     prop: 'isSupplement',
     label: '是否补报',
@@ -233,7 +235,7 @@ const viewFormFields = [
     fields: [
       { prop: 'studentName', label: '学生姓名', type: 'input', span: 12 },
       { prop: 'className', label: '所在班级', type: 'input', span: 12 },
-      { prop: 'week', label: '周次', type: 'input', span: 12 },
+      { prop: 'month', label: '年月', type: 'input', span: 12 },
       { prop: 'submitDate', label: '提交日期', type: 'input', span: 12 },
       { prop: 'isSupplement', label: '是否补交', type: 'input', span: 12 },
       { prop: 'content', label: '报告内容', type: 'textarea', span: 24, rows: 4 },
@@ -268,7 +270,7 @@ const dialogFormData = reactive({
   studentName: '',
   className: '',
   department: '',
-  week: '',
+  month: '',
   submitDate: '',
   status: '',
   isSupplement: '',
@@ -284,7 +286,7 @@ const dialogFormData = reactive({
 
 // 对话框标题
 const dialogTitle = computed(() => {
-  return `${dialogFormData.studentName || ''} ${dialogFormData.week || ''} 工作周报`
+  return `${dialogFormData.studentName || ''} ${dialogFormData.month || ''} 月度报告`
 })
 
 // 对话框表单字段（根据isViewMode判断是否可编辑）
@@ -297,7 +299,7 @@ const dialogFields = computed(() => {
         fields: [
           { prop: 'studentName', label: '学生姓名', type: 'input', disabled: true, span: 12 },
           { prop: 'className', label: '所在班级', type: 'input', disabled: true, span: 12 },
-          { prop: 'week', label: '周次', type: 'input', disabled: true, span: 12 },
+          { prop: 'month', label: '年月', type: 'input', disabled: true, span: 12 },
           { prop: 'submitDate', label: '提交日期', type: 'input', disabled: true, span: 12 },
           { prop: 'isSupplement', label: '是否补交', type: 'input', disabled: true, span: 12 },
           { prop: 'content', label: '报告内容', type: 'textarea', disabled: true, span: 24, rows: 4 },
@@ -325,7 +327,7 @@ const dialogFields = computed(() => {
 const crudRef = ref()
 const errorMessage = ref('')
 
-console.log('=================== 周报页面初始化 ===================')
+console.log('=================== 月报页面初始化 ===================')
 
 // 监听 crudRef 变化
 watch(crudRef, (newVal) => {
@@ -348,23 +350,23 @@ const handleExport = () => {
   ElMessage.success('导出成功')
 }
 
-// 已写周报统计
+// 已写月报统计
 const handleWrittenStats = () => {
-  ElMessageBox.alert('已提交周报学生：156人', '已写周报统计', {
+  ElMessageBox.alert('已提交月报学生：156人', '已写月报统计', {
     confirmButtonText: '确定'
   })
 }
 
-// 未写周报统计
+// 未写月报统计
 const handleUnwrittenStats = () => {
-  ElMessageBox.alert('未提交周报学生：79人', '未写周报统计', {
+  ElMessageBox.alert('未提交月报学生：79人', '未写月报统计', {
     confirmButtonText: '确定'
   })
 }
 
 // 完成数量统计
 const handleCompleteStats = () => {
-  ElMessageBox.alert('本周应提交：235人\n已提交：156人\n完成率：66.4%', '完成数量统计', {
+  ElMessageBox.alert('本月应提交：235人<br>已提交：156人<br>完成率：66.4%', '完成数量统计', {
     confirmButtonText: '确定',
     dangerouslyUseHTMLString: true
   })
@@ -427,7 +429,7 @@ const handleReject = async () => {
 // 撤回
 const handleWithdraw = (row) => {
   ElMessageBox.confirm(
-    `确定要撤回学生【${row.studentName}】第【${row.week}】的周报吗？撤回后学生可以重新编辑和提交。`,
+    `确定要撤回学生【${row.studentName}】【${row.month}】的月报吗？撤回后学生可以重新编辑和提交。`,
     '撤回确认',
     {
       confirmButtonText: '确定',
@@ -454,5 +456,3 @@ const handleCurrentChange = (page) => {
 </script>
 
 
-<style scoped>
-</style>

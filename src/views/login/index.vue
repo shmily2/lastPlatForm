@@ -12,8 +12,8 @@
               <path d="M40 44h8M44 40v8" stroke="#fff" stroke-width="2"/>
             </svg>
           </div>
-          <div class="school-name">南京市中职高职学校</div>
-          <div class="school-name-en">Nanjing secondary vocational and higher vocational schools</div>
+          <div class="school-name">产教融合智慧培养平台</div>
+          <div class="school-name-en">Industry-education integration and smart training platform</div>
         </div>
         <div class="illustration">
           <svg viewBox="0 0 400 300" width="100%" height="100%">

@@ -1,225 +1,96 @@
 <template>
   <!-- 查看模式：卡片式详情展示 -->
   <div v-if="viewMode" class="view-mode">
-    <!-- 分组模式 -->
-    <template v-if="isGrouped">
-      <div v-for="(group, groupIndex) in groupedFields" :key="groupIndex" class="info-card">
-        <div class="card-header">
-          <span class="card-line"></span>
-          <span class="card-title">{{ group.title }}</span>
-        </div>
-        <div class="card-body">
-          <el-row :gutter="0">
-            <el-col v-for="field in group.fields" :key="field.prop" :xs="24"
-              :sm="field.span && field.span <= 12 ? 12 : 24" :md="field.span || 12">
-              <div class="info-item">
-                <div class="info-label">{{ field.label }}</div>
-                <div class="info-value">
-                  <template v-if="field.type === 'upload' && formData[field.prop] && formData[field.prop].length">
-                    <el-image v-for="(file, index) in formData[field.prop]" :key="index"
-                      :src="file.url || file.response?.url" :preview-src-list="getPreviewList(field.prop)"
-                      :initial-index="index" fit="cover"
-                      style="width: 80px; height: 80px; margin-right: 8px; border-radius: 4px; cursor: pointer;" />
-                  </template>
-                  <template v-else-if="field.type === 'select'">
-                    {{ getSelectLabel(field, formData[field.prop]) }}
-                  </template>
-                  <template v-else>
-                    {{ formData[field.prop] || '-' }}
-                  </template>
-                </div>
-              </div>
-            </el-col>
-          </el-row>
-        </div>
+    <div v-for="(group, groupIndex) in fields" :key="'view-' + groupIndex" class="info-card">
+      <!-- 分组标题：有title就显示，没有就隐藏 -->
+      <div v-if="group.title" class="card-header">
+        <span class="card-line"></span>
+        <span class="card-title">{{ group.title }}</span>
       </div>
-    </template>
-
-    <!-- 非分组模式 -->
-    <template v-else>
-      <div class="info-card">
-        <div class="card-body">
-          <el-row :gutter="gutter">
-            <el-col v-for="field in fields" :key="field.prop" :xs="24" :sm="field.span && field.span <= 12 ? 12 : 24"
-              :md="field.span || 12">
-              <div class="info-item">
-                <div class="info-label">{{ field.label }}</div>
-                <div class="info-value">
-                  <template v-if="field.type === 'upload' && formData[field.prop] && formData[field.prop].length">
-                    <el-image v-for="(file, index) in formData[field.prop]" :key="index"
-                      :src="file.url || file.response?.url" :preview-src-list="getPreviewList(field.prop)"
-                      :initial-index="index" fit="cover"
-                      style="width: 80px; height: 80px; margin-right: 8px; border-radius: 4px; cursor: pointer;" />
-                  </template>
-                  <template v-else-if="field.type === 'select'">
-                    {{ getSelectLabel(field, formData[field.prop]) }}
-                  </template>
-                  <template v-else>
-                    {{ formData[field.prop] || '-' }}
-                  </template>
-                </div>
+      <div class="card-body">
+        <el-row :gutter="0">
+          <el-col v-for="field in group.fields" :key="field.prop" :xs="24"
+            :sm="field.span && field.span <= 12 ? 12 : 24" :md="field.span || 12">
+            <div class="info-item">
+              <div class="info-label">{{ field.label }}</div>
+              <div class="info-value">
+                <template v-if="field.type === 'upload' && formData[field.prop] && formData[field.prop].length">
+                  <el-image v-for="(file, index) in formData[field.prop]" :key="index"
+                    :src="file.url || file.response?.url" :preview-src-list="getPreviewList(field.prop)"
+                    :initial-index="index" fit="cover"
+                    style="width: 80px; height: 80px; margin-right: 8px; border-radius: 4px; cursor: pointer;" />
+                </template>
+                <template v-else-if="field.type === 'select'">
+                  {{ getSelectLabel(field, formData[field.prop]) }}
+                </template>
+                <template v-else-if="field.type === 'rate'">
+                  <el-rate v-model="formData[field.prop]" :max="field.max || 5"
+                    :texts="['不及格', '及格', '中等', '良好', '优秀']" show-text
+                    :disabled="isDisabled" />
+                </template>
+                <template v-else>
+                  {{ (formData[field.prop] === null || formData[field.prop] === undefined || (Array.isArray(formData[field.prop]) && formData[field.prop].length === 0)) ? '-' : formData[field.prop] }}{{ field.suffix || '' }}
+                </template>
               </div>
-            </el-col>
-          </el-row>
-        </div>
+            </div>
+          </el-col>
+        </el-row>
       </div>
-    </template>
+    </div>
   </div>
 
   <!-- 编辑模式 -->
   <el-form v-else ref="formRef" :model="formData" :rules="rules" :label-width="labelWidth"
     :label-position="labelPosition" :disabled="disabled">
-    <template v-if="isGrouped">
-      <!-- 分组模式 -->
-      <div v-for="(group, groupIndex) in groupedFields" :key="groupIndex" class="form-group">
-        <!-- 分组标题 -->
-        <div v-if="group.title" class="group-title">
-          <span class="group-line"></span>
-          <span class="group-text">{{ group.title }}</span>
-        </div>
-        <!-- 分组内容 -->
-        <el-row :gutter="gutter">
-          <el-col v-for="field in group.fields" :key="field.prop" :xs="24" :sm="24" :md="field.span || 12"
-            :lg="field.span || 12" :xl="field.span || 8">
-            <el-form-item :label="field.label" :prop="field.prop" :required="field.required">
-              <!-- 自定义插槽 -->
-              <slot v-if="field.slot" :name="field.slot" :field="field" :form="formData" />
-              <!-- 输入框 -->
-              <el-input v-else-if="field.type === 'input'" v-model="formData[field.prop]"
-                :placeholder="field.placeholder || `请输入${field.label}`" :type="field.inputType || 'text'"
-                :rows="field.rows" :maxlength="field.maxlength" :show-word-limit="field.showWordLimit"
-                :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%" />
-              <!-- 文本域 -->
-              <el-input v-else-if="field.type === 'textarea'" v-model="formData[field.prop]" type="textarea"
-                :rows="field.rows || 4" :placeholder="field.placeholder || `请输入${field.label}`"
-                :maxlength="field.maxlength" :show-word-limit="field.showWordLimit"
-                :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%" />
-              <!-- 选择器 -->
-              <el-select v-else-if="field.type === 'select'" v-model="formData[field.prop]"
-                :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
-                :disabled="field.disabled || disabled" :filterable="field.filterable" :multiple="field.multiple"
-                style="width: 100%" @change="field.onChange && field.onChange($event)">
-                <el-option v-for="option in (field.options.value || field.options)" :key="option.value"
-                  :label="option.label" :value="option.value" :disabled="option.disabled" />
-              </el-select>
-              <!-- 日期选择器 -->
-              <el-date-picker v-else-if="field.type === 'date'" v-model="formData[field.prop]" type="date"
-                :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
-                :disabled="field.disabled || disabled" :disabled-date="field.disabledDate" style="width: 100%" />
-              <!-- 月份选择器 -->
-              <el-date-picker v-else-if="field.type === 'month'" v-model="formData[field.prop]" type="month"
-                :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
-                :disabled="field.disabled || disabled" style="width: 100%" />
-              <!-- 日期时间选择器 -->
-              <el-date-picker v-else-if="field.type === 'datetime'" v-model="formData[field.prop]" type="datetime"
-                :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
-                :disabled="field.disabled || disabled" style="width: 100%" />
-              <!-- 日期范围选择器 -->
-              <el-date-picker v-else-if="field.type === 'daterange'" v-model="formData[field.prop]" type="daterange"
-                range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
-                :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%" />
-              <!-- 时间选择器 -->
-              <el-time-picker v-else-if="field.type === 'time'" v-model="formData[field.prop]"
-                :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
-                :disabled="field.disabled || disabled" style="width: 100%" />
-              <!-- 数字输入框 -->
-              <el-input-number v-else-if="field.type === 'number'" v-model="formData[field.prop]" :min="field.min"
-                :max="field.max" :step="field.step || 1" :precision="field.precision"
-                :controls-position="field.controlsPosition" :disabled="field.disabled || disabled"
-                style="width: 100%" />
-              <!-- 单选框 -->
-              <el-radio-group v-else-if="field.type === 'radio'" v-model="formData[field.prop]"
-                :disabled="field.disabled || disabled">
-                <el-radio v-for="option in field.options" :key="option.value" :label="option.value"
-                  :disabled="option.disabled">
-                  {{ option.label }}
-                </el-radio>
-              </el-radio-group>
-              <!-- 复选框 -->
-              <el-checkbox-group v-else-if="field.type === 'checkbox'" v-model="formData[field.prop]"
-                :disabled="field.disabled || disabled">
-                <el-checkbox v-for="option in field.options" :key="option.value" :label="option.value"
-                  :disabled="option.disabled">
-                  {{ option.label }}
-                </el-checkbox>
-              </el-checkbox-group>
-              <!-- 开关 -->
-              <el-switch v-else-if="field.type === 'switch'" v-model="formData[field.prop]"
-                :active-text="field.activeText" :inactive-text="field.inactiveText"
-                :disabled="field.disabled || disabled" />
-              <!-- 上传 -->
-              <el-upload v-else-if="field.type === 'upload'" v-model:file-list="formData[field.prop]"
-                :action="field.action || '#'" :auto-upload="false" :list-type="field.listType || 'text'"
-                :accept="field.accept" :limit="field.limit" :disabled="field.disabled || disabled"
-                class="upload-full-width"
-                :class="[{ 'upload-picture-card': field.listType === 'picture-card' }, { 'upload-full-hide': field.listType === 'picture-card' && formData[field.prop] && formData[field.prop].length >= field.limit }]"
-                style="width: 100%;padding:0 20PX" :on-preview="(file) => handlePictureCardPreview(file, field.prop)">
-                <!-- picture-card 模式显示 + 按钮 -->
-                <div v-if="field.listType === 'picture-card'" class="el-upload__tip">
-                  <el-icon>
-                    <Plus />
-                  </el-icon>
-                </div>
-                <el-button v-else type="primary" style="width: 100%">点击上传</el-button>
-                <template #tip v-if="field.tip">
-                  <div class="el-upload__tip">{{ field.tip }}</div>
-                </template>
-              </el-upload>
-            </el-form-item>
-          </el-col>
-        </el-row>
+    <div v-for="(group, groupIndex) in fields" :key="'edit-' + groupIndex" class="form-group">
+      <!-- 分组标题：有title就显示，没有就隐藏 -->
+      <div v-if="group.title" class="group-title">
+        <span class="group-line"></span>
+        <span class="group-text">{{ group.title }}</span>
       </div>
-    </template>
-
-    <template v-else>
-      <!-- 非分组模式 -->
       <el-row :gutter="gutter">
-        <el-col v-for="field in fields" :key="field.prop" :xs="24" :sm="24" :md="field.span || 12"
+        <el-col v-for="field in group.fields" :key="field.prop" :xs="24" :sm="24" :md="field.span || 12"
           :lg="field.span || 12" :xl="field.span || 8">
           <el-form-item :label="field.label" :prop="field.prop" :required="field.required">
-            <!-- 输入框 -->
-            <el-input v-if="field.type === 'input'" v-model="formData[field.prop]"
+            <slot v-if="field.slot" :name="field.slot" :field="field" :form="formData" />
+            <component v-else-if="field.component" :is="field.component" v-model="formData[field.prop]"
+              v-bind="field.props" :disabled="field.disabled || disabled" />
+            <el-input v-else-if="field.type === 'input'" v-model="formData[field.prop]"
               :placeholder="field.placeholder || `请输入${field.label}`" :type="field.inputType || 'text'"
               :rows="field.rows" :maxlength="field.maxlength" :show-word-limit="field.showWordLimit"
-              :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%" />
-            <!-- 文本域 -->
+              :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%">
+              <template v-if="field.suffix" #suffix>{{ field.suffix }}</template>
+            </el-input>
             <el-input v-else-if="field.type === 'textarea'" v-model="formData[field.prop]" type="textarea"
               :rows="field.rows || 4" :placeholder="field.placeholder || `请输入${field.label}`"
-              :maxlength="field.maxlength" :show-word-limit="field.showWordLimit" :clearable="field.clearable !== false"
-              :disabled="field.disabled || disabled" style="width: 100%" />
-            <!-- 选择器 -->
+              :maxlength="field.maxlength" :show-word-limit="field.showWordLimit"
+              :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%" />
             <el-select v-else-if="field.type === 'select'" v-model="formData[field.prop]"
               :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
               :disabled="field.disabled || disabled" :filterable="field.filterable" :multiple="field.multiple"
-              style="width: 100%">
-              <el-option v-for="option in field.options" :key="option.value" :label="option.label" :value="option.value"
-                :disabled="option.disabled" />
+              style="width: 100%" @change="field.onChange && field.onChange($event)">
+              <el-option v-for="option in (field.options.value || field.options)" :key="option.value"
+                :label="option.label" :value="option.value" :disabled="option.disabled" />
             </el-select>
-            <!-- 日期选择器 -->
             <el-date-picker v-else-if="field.type === 'date'" v-model="formData[field.prop]" type="date"
               :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
               :disabled="field.disabled || disabled" :disabled-date="field.disabledDate" style="width: 100%" />
-            <!-- 月份选择器 -->
             <el-date-picker v-else-if="field.type === 'month'" v-model="formData[field.prop]" type="month"
               :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
               :disabled="field.disabled || disabled" style="width: 100%" />
-            <!-- 日期时间选择器 -->
             <el-date-picker v-else-if="field.type === 'datetime'" v-model="formData[field.prop]" type="datetime"
               :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
-              :disabled="field.disabled || disabled" style="width: 100%;" />
-            <!-- 日期范围选择器 -->
-            <el-date-picker v-else-if="field.type === 'daterange'" v-model="formData[field.prop]" type="daterange"
-              range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :clearable="field.clearable !== false"
               :disabled="field.disabled || disabled" style="width: 100%" />
-            <!-- 时间选择器 -->
+            <el-date-picker v-else-if="field.type === 'daterange'" v-model="formData[field.prop]" type="daterange"
+              range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
+              :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%" />
             <el-time-picker v-else-if="field.type === 'time'" v-model="formData[field.prop]"
               :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
               :disabled="field.disabled || disabled" style="width: 100%" />
-            <!-- 数字输入框 -->
             <el-input-number v-else-if="field.type === 'number'" v-model="formData[field.prop]" :min="field.min"
               :max="field.max" :step="field.step || 1" :precision="field.precision"
-              :controls-position="field.controlsPosition" :disabled="field.disabled || disabled" style="width: 100%" />
-            <!-- 单选框 -->
+              :controls-position="field.controlsPosition" :disabled="field.disabled || disabled"
+              style="width: 100%" />
             <el-radio-group v-else-if="field.type === 'radio'" v-model="formData[field.prop]"
               :disabled="field.disabled || disabled">
               <el-radio v-for="option in field.options" :key="option.value" :label="option.value"
@@ -227,7 +98,6 @@
                 {{ option.label }}
               </el-radio>
             </el-radio-group>
-            <!-- 复选框 -->
             <el-checkbox-group v-else-if="field.type === 'checkbox'" v-model="formData[field.prop]"
               :disabled="field.disabled || disabled">
               <el-checkbox v-for="option in field.options" :key="option.value" :label="option.value"
@@ -235,36 +105,38 @@
                 {{ option.label }}
               </el-checkbox>
             </el-checkbox-group>
-            <!-- 开关 -->
             <el-switch v-else-if="field.type === 'switch'" v-model="formData[field.prop]"
               :active-text="field.activeText" :inactive-text="field.inactiveText"
               :disabled="field.disabled || disabled" />
-            <!-- 上传 -->
+            <el-rate v-else-if="field.type === 'rate'" v-model="formData[field.prop]" :max="field.max || 5"
+              :texts="['不及格', '及格', '中等', '良好', '优秀']" show-text
+              :disabled="field.disabled || disabled" />
+            <!-- hideDelete时用查看模式展示图片 -->
+            <div v-if="field.type === 'upload' && field.hideDelete && formData[field.prop] && formData[field.prop].length" class="view-upload-list">
+              <el-image v-for="(file, index) in formData[field.prop]" :key="index"
+                :src="file.url || file.response?.url" :preview-src-list="getPreviewList(field.prop)"
+                :initial-index="index" fit="cover"
+                style="width: 80px; height: 80px; margin-right: 8px; border-radius: 4px; cursor: pointer;" />
+            </div>
             <el-upload v-else-if="field.type === 'upload'" v-model:file-list="formData[field.prop]"
               :action="field.action || '#'" :auto-upload="false" :list-type="field.listType || 'text'"
               :accept="field.accept" :limit="field.limit" :disabled="field.disabled || disabled"
               class="upload-full-width"
-              :class="[{ 'upload-picture-card': field.listType === 'picture-card' }, { 'upload-full-hide': field.listType === 'picture-card' && formData[field.prop] && formData[field.prop].length >= field.limit }]"
-              style="width: 100%;padding:0 20px" :on-preview="(file) => handlePictureCardPreview(file, field.prop)">
-              <!-- picture-card 模式显示 + 按钮 -->
-              <div v-if="field.listType === 'picture-card'" class="el-upload__tip">
-                <el-icon>
-                  <Plus />
-                </el-icon>
+              :class="[{ 'upload-picture-card': field.listType === 'picture-card' }, { 'upload-full-hide': field.listType === 'picture-card' && formData[field.prop] && formData[field.prop].length >= field.limit }, { 'upload-hidden': field.hideUpload }]"
+              style="width: 100%;padding:0 20PX" :on-preview="(file) => handlePictureCardPreview(file, field.prop)" :on-remove="field.hideDelete ? (file, fileList) => { return false } : undefined">
+              <div v-if="field.listType === 'picture-card' && !field.hideUpload" class="el-upload__tip">
+                <el-icon><Plus /></el-icon>
               </div>
-              <el-button v-else type="primary" style="width: 100%">点击上传</el-button>
+              <el-button v-else-if="!field.hideUpload" type="primary" style="width: 100%">点击上传</el-button>
               <template #tip v-if="field.tip">
                 <div class="el-upload__tip">{{ field.tip }}</div>
               </template>
             </el-upload>
-            <!-- 自定义插槽 -->
-            <slot v-else-if="field.slot" :name="field.slot" :field="field" :form="formData" />
           </el-form-item>
         </el-col>
       </el-row>
-    </template>
+    </div>
 
-    <!-- 表单操作按钮 -->
     <el-form-item v-if="showButtons" class="form-buttons">
       <slot name="buttons">
         <el-button type="primary" @click="handleSubmit">提交</el-button>
@@ -274,15 +146,15 @@
     </el-form-item>
   </el-form>
 
-  <!-- 图片预览器 -->
   <el-image-viewer v-if="showImageViewer" :url-list="previewImageList" :initial-index="currentPreviewIndex"
     @close="showImageViewer = false" />
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { ElMessage, ElImageViewer } from 'element-plus'
+import { ElImageViewer } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+
 
 const props = defineProps({
   // 表单数据
@@ -347,15 +219,12 @@ const formData = computed({
   set: (val) => emit('update:modelValue', val)
 })
 
-// 判断是否为分组模式（fields 数组中包含 title 字段）
+// 查看模式时自动禁用
+const isDisabled = computed(() => props.disabled || props.viewMode)
+
+// 判断是否为分组模式（fields数组第一个元素有title属性）
 const isGrouped = computed(() => {
   return props.fields.length > 0 && props.fields[0]?.title !== undefined
-})
-
-// 分组后的字段
-const groupedFields = computed(() => {
-  if (!isGrouped.value) return []
-  return props.fields
 })
 
 // 获取选择器的显示文本
@@ -379,22 +248,16 @@ const currentPreviewIndex = ref(0)
 const previewImageList = ref([])
 
 const handlePictureCardPreview = (file, prop) => {
-  console.log('handlePictureCardPreview called', file, prop)
-  if (!prop) {
-    console.error('prop is undefined')
-    return
-  }
+  if (!prop) return
   previewImageList.value = getPreviewList(prop)
   currentPreviewIndex.value = formData.value[prop].findIndex(f => f.url === file.url || f.url === file.response?.url || f.response?.url === file.url)
   if (currentPreviewIndex.value < 0) currentPreviewIndex.value = 0
-  console.log('previewImageList:', previewImageList.value, 'currentPreviewIndex:', currentPreviewIndex.value)
   showImageViewer.value = true
 }
 
 // 提交表单
 const handleSubmit = async () => {
   if (!formRef.value) return
-
   try {
     await formRef.value.validate()
     emit('submit', formData.value)
@@ -437,13 +300,7 @@ defineExpose({
   formRef
 })
 </script>
-
 <style scoped>
-/* 查看模式 - 卡片式布局 */
-/* .view-mode {
-  padding: 16px;
-} */
-
 .info-card {
   background: #fff;
   border: 1px solid #e4e7ed;
@@ -487,7 +344,7 @@ defineExpose({
   border-bottom: 1px solid #f0f0f0;
   min-height: 42px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .info-item:last-child {
@@ -590,7 +447,13 @@ defineExpose({
   gap: 20px;
   padding: 0 12px;
 }
-
+/* 分数样式 */
+:deep(.el-rate) {
+  padding: 0 10px;
+}
+:deep(.el-rate.is-disabled){
+  padding: 0;
+}
 /* 分组标题样式 */
 .form-group {
   margin-bottom: 20px;
@@ -628,14 +491,48 @@ defineExpose({
   height: 80px;
   width: 80px;
 }
-.upload-full-hide >>> .el-upload--picture-card {
+
+.upload-full-hide>>>.el-upload--picture-card {
   display: none !important;
 }
+
+.upload-hidden>>>.el-upload--picture-card {
+  display: none !important;
+}
+
+.upload-hidden>>>.el-upload__tip {
+  display: none !important;
+}
+
+/* 上传隐藏样式 */
+.upload-hidden .el-upload--picture-card {
+  display: none;
+}
+
+.upload-hidden .el-upload__tip {
+  display: none;
+}
+
 /* 移动端表单按钮调整 */
 @media (max-width: 768px) {
   .form-buttons :deep(.el-button) {
     width: 100%;
     margin: 5px 0;
   }
+}
+
+/* 查看模式上传图片列表 */
+.view-upload-list {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+}
+
+/* 分数禁用时隐藏文字 */
+::deep(.el-rate.is-disabled .el-rate__text) {
+  display: none;
+}
+::deep(.el-rate.is-disabled) {
+  padding: 0;
 }
 </style>

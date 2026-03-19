@@ -135,15 +135,15 @@ const menus = [
         hidden: false,
         permissions: ['report:monthly:view']
       },
-      {
-        id: 53,
-        title: '科室实习手册',
-        icon: 'DocumentChecked',
-        path: '/report/review',
-        component: 'report/review/index',
-        hidden: false,
-        permissions: ['report:review:view']
-      }
+      // {
+      //   id: 53,
+      //   title: '科室实习手册',
+      //   icon: 'DocumentChecked',
+      //   path: '/report/review',
+      //   component: 'report/review/index',
+      //   hidden: false,
+      //   permissions: ['report:review:view']
+      // }
     ]
   },
   {

@@ -54,16 +54,19 @@
     >
       <!-- 自定义底部按钮 -->
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
         <!-- 审批模式：显示通过和驳回按钮 -->
         <template v-if="dialogMode === 'approve'">
+          <el-button @click="dialogVisible = false">取消</el-button>
           <el-button type="success" @click="handleApproveSubmit">通过</el-button>
           <el-button type="danger" @click="handleRejectSubmit">驳回</el-button>
         </template>
         <!-- 查看模式：只显示确定按钮 -->
         <el-button v-else-if="dialogMode === 'view'" type="primary" @click="dialogVisible = false">确定</el-button>
-        <!-- 新增/编辑模式：显示确定按钮 -->
-        <el-button v-else type="primary" @click="handleDialogConfirm">确定</el-button>
+        <!-- 新增/编辑模式：显示取消和确定按钮 -->
+        <template v-else>
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleDialogConfirm">确定</el-button>
+        </template>
       </template>
     </Dialog>
   </div>
@@ -97,15 +100,6 @@ const classes = [
   '临床2202'
 ]
 
-// 请假类型
-const leaveTypes = [
-  { label: '事假', value: 'personal' },
-  { label: '病假', value: 'sick' },
-  { label: '公假', value: 'official' },
-  { label: '婚假', value: 'marriage' },
-  { label: '产假', value: 'maternity' }
-]
-
 // Mock API 配置
 const apiConfig = {
   list: (params) => {
@@ -119,12 +113,14 @@ const apiConfig = {
         id: 1,
         applicant: '阮文欣',
         className: '护理2201',
-        title: '病假申请',
-        type: '病假',
-        leaveDays: '3',
-        leaveTime: '2025-03-10',
-        reason: '因身体不适，需要去医院检查治疗',
-        applyTime: '2025-03-08 10:30:00',
+        startTime: '2025-05-15 13:30:00',
+        endTime: '2025-05-16 00:00:00',
+        leaveDays: '1',
+        reason: '回学校参加论文答辩',
+        emergencyContact: '徐春霞',
+        phone: '18205185846',
+        attachments: [{ name: '证明.jpg', url: 'https://cube.elemecdn.com/6/94/4d3ea53c084bad6931a56d5158a48jpeg.jpeg' }],
+        applyTime: '2025-05-10 10:30:00',
         approvalStatus: 'pending',
         approver: ''
       },
@@ -132,12 +128,14 @@ const apiConfig = {
         id: 2,
         applicant: '江焮漪',
         className: '护理2201',
-        title: '事假申请',
-        type: '事假',
+        startTime: '2025-05-18 08:00:00',
+        endTime: '2025-05-19 18:00:00',
         leaveDays: '2',
-        leaveTime: '2025-03-15',
         reason: '家里有急事需要处理',
-        applyTime: '2025-03-12 09:15:00',
+        emergencyContact: '江先生',
+        phone: '13800138001',
+        attachments: [],
+        applyTime: '2025-05-12 09:15:00',
         approvalStatus: 'approved',
         approver: '张老师'
       },
@@ -145,12 +143,14 @@ const apiConfig = {
         id: 3,
         applicant: '王佳璐',
         className: '护理2202',
-        title: '病假申请',
-        type: '病假',
-        leaveDays: '5',
-        leaveTime: '2025-03-20',
-        reason: '感冒发烧，需要休息',
-        applyTime: '2025-03-18 14:20:00',
+        startTime: '2025-05-20 09:00:00',
+        endTime: '2025-05-22 17:00:00',
+        leaveDays: '3',
+        reason: '感冒发烧，需要休息就医',
+        emergencyContact: '王先生',
+        phone: '13900139002',
+        attachments: [],
+        applyTime: '2025-05-18 14:20:00',
         approvalStatus: 'pending',
         approver: ''
       },
@@ -158,12 +158,14 @@ const apiConfig = {
         id: 4,
         applicant: '赵佳羽',
         className: '护理2203',
-        title: '公假申请',
-        type: '公假',
-        leaveDays: '1',
-        leaveTime: '2025-03-05',
+        startTime: '2025-05-05 14:00:00',
+        endTime: '2025-05-05 18:00:00',
+        leaveDays: '0.5',
         reason: '参加学校组织的重要会议',
-        applyTime: '2025-03-03 08:45:00',
+        emergencyContact: '赵女士',
+        phone: '13700137003',
+        attachments: [],
+        applyTime: '2025-05-03 08:45:00',
         approvalStatus: 'approved',
         approver: '李主任'
       },
@@ -171,12 +173,14 @@ const apiConfig = {
         id: 5,
         applicant: '李妍辰',
         className: '护理2201',
-        title: '事假申请',
-        type: '事假',
+        startTime: '2025-05-25 08:00:00',
+        endTime: '2025-05-25 17:00:00',
         leaveDays: '1',
-        leaveTime: '2025-03-25',
         reason: '家庭事务需要处理',
-        applyTime: '2025-03-23 11:00:00',
+        emergencyContact: '李先生',
+        phone: '13600136005',
+        attachments: [],
+        applyTime: '2025-05-23 11:00:00',
         approvalStatus: 'rejected',
         approver: '王老师'
       },
@@ -184,12 +188,14 @@ const apiConfig = {
         id: 6,
         applicant: '梁雨露',
         className: '护理2202',
-        title: '病假申请',
-        type: '病假',
+        startTime: '2025-05-28 08:00:00',
+        endTime: '2025-05-29 18:00:00',
         leaveDays: '2',
-        leaveTime: '2025-03-28',
         reason: '肠胃不适，需要就医',
-        applyTime: '2025-03-26 15:30:00',
+        emergencyContact: '梁女士',
+        phone: '13500135006',
+        attachments: [],
+        applyTime: '2025-05-26 15:30:00',
         approvalStatus: 'pending',
         approver: ''
       },
@@ -197,12 +203,14 @@ const apiConfig = {
         id: 7,
         applicant: '林欣',
         className: '护理2203',
-        title: '事假申请',
-        type: '事假',
+        startTime: '2025-06-02 08:00:00',
+        endTime: '2025-06-04 18:00:00',
         leaveDays: '3',
-        leaveTime: '2025-04-02',
         reason: '参加朋友的婚礼',
-        applyTime: '2025-03-30 09:50:00',
+        emergencyContact: '林先生',
+        phone: '13400134007',
+        attachments: [],
+        applyTime: '2025-05-30 09:50:00',
         approvalStatus: 'pending',
         approver: ''
       },
@@ -210,12 +218,14 @@ const apiConfig = {
         id: 8,
         applicant: '李慧珍',
         className: '护理2201',
-        title: '病假申请',
-        type: '病假',
+        startTime: '2025-06-08 08:00:00',
+        endTime: '2025-06-11 18:00:00',
         leaveDays: '4',
-        leaveTime: '2025-04-08',
         reason: '需要进行牙科手术',
-        applyTime: '2025-04-05 13:25:00',
+        emergencyContact: '李女士',
+        phone: '13300133008',
+        attachments: [],
+        applyTime: '2025-06-05 13:25:00',
         approvalStatus: 'approved',
         approver: '张老师'
       },
@@ -223,12 +233,14 @@ const apiConfig = {
         id: 9,
         applicant: '何宇豪',
         className: '护理2202',
-        title: '公假申请',
-        type: '公假',
+        startTime: '2025-06-12 08:00:00',
+        endTime: '2025-06-12 18:00:00',
         leaveDays: '1',
-        leaveTime: '2025-04-12',
         reason: '参加实习单位组织的培训',
-        applyTime: '2025-04-10 10:10:00',
+        emergencyContact: '何先生',
+        phone: '13200132009',
+        attachments: [],
+        applyTime: '2025-06-10 10:10:00',
         approvalStatus: 'approved',
         approver: '李主任'
       },
@@ -236,12 +248,14 @@ const apiConfig = {
         id: 10,
         applicant: '谢雅',
         className: '护理2203',
-        title: '事假申请',
-        type: '事假',
+        startTime: '2025-06-18 08:00:00',
+        endTime: '2025-06-19 18:00:00',
         leaveDays: '2',
-        leaveTime: '2025-04-18',
         reason: '处理个人事务',
-        applyTime: '2025-04-15 14:40:00',
+        emergencyContact: '谢先生',
+        phone: '13100131010',
+        attachments: [],
+        applyTime: '2025-06-15 14:40:00',
         approvalStatus: 'pending',
         approver: ''
       },
@@ -249,12 +263,14 @@ const apiConfig = {
         id: 11,
         applicant: '侯欣妍',
         className: '护理2204',
-        title: '病假申请',
-        type: '病假',
+        startTime: '2025-06-22 08:00:00',
+        endTime: '2025-06-24 18:00:00',
         leaveDays: '3',
-        leaveTime: '2025-04-22',
         reason: '身体检查需要住院观察',
-        applyTime: '2025-04-20 08:55:00',
+        emergencyContact: '侯先生',
+        phone: '13000130011',
+        attachments: [],
+        applyTime: '2025-06-20 08:55:00',
         approvalStatus: 'rejected',
         approver: '王老师'
       },
@@ -262,12 +278,14 @@ const apiConfig = {
         id: 12,
         applicant: '张颖',
         className: '护理2205',
-        title: '公假申请',
-        type: '公假',
+        startTime: '2025-06-25 08:00:00',
+        endTime: '2025-06-25 18:00:00',
         leaveDays: '1',
-        leaveTime: '2025-04-25',
         reason: '参加学校组织的义务活动',
-        applyTime: '2025-04-23 11:30:00',
+        emergencyContact: '张女士',
+        phone: '18900129012',
+        attachments: [],
+        applyTime: '2025-06-23 11:30:00',
         approvalStatus: 'approved',
         approver: '张老师'
       }
@@ -287,15 +305,15 @@ const apiConfig = {
     })
   },
   add: (data) => {
-    console.log('新增请假申请:', data)
+    console.log('新增请假条:', data)
     return Promise.resolve({ code: 200, message: '新增成功' })
   },
   update: (data) => {
-    console.log('修改请假申请:', data)
+    console.log('修改请假条:', data)
     return Promise.resolve({ code: 200, message: '修改成功' })
   },
   approve: (data) => {
-    console.log('审批请假申请:', data)
+    console.log('审批请假条:', data)
     return Promise.resolve({ code: 200, message: '审批成功' })
   }
 }
@@ -342,13 +360,14 @@ const searchFields = [
 
 // 表格列配置
 const tableColumns = [
-  { prop: 'applicant', label: '发起人', minWidth: 90 },
-  { prop: 'className', label: '班级', minWidth: 110 },
-  { prop: 'title', label: '标题', minWidth: 150 },
-  { prop: 'type', label: '类型', width: 80 },
+  { prop: 'applicant', label: '请假人', minWidth: 100 },
+  { prop: 'className', label: '所在班级', minWidth: 110 },
+  { prop: 'startTime', label: '开始日期', minWidth: 160 },
+  { prop: 'endTime', label: '结束日期', minWidth: 160 },
   { prop: 'leaveDays', label: '请假天数', width: 100 },
-  { prop: 'leaveTime', label: '请假时间', minWidth: 180 },
-  { prop: 'reason', label: '请假原因', minWidth: 150 },
+  { prop: 'reason', label: '请假事由', minWidth: 150 },
+  { prop: 'emergencyContact', label: '紧急联系人', minWidth: 100 },
+  { prop: 'phone', label: '手机', width: 120 },
   { prop: 'applyTime', label: '申请时间', width: 160 },
   {
     prop: 'approvalStatus',
@@ -369,90 +388,115 @@ const tableColumns = [
 // 表单字段配置
 const formFields = [
   {
-    prop: 'applicant',
-    label: '发起人',
-    type: 'input',
-    required: true,
-    placeholder: '请输入发起人',
-    disabled: true,
-    span: 12
-  },
-  {
-    prop: 'className',
-    label: '班级',
-    type: 'select',
-    required: true,
-    placeholder: '请选择班级',
-    span: 12,
-    options: classes.map(c => ({ label: c, value: c }))
-  },
-  {
-    prop: 'title',
-    label: '标题',
-    type: 'input',
-    required: true,
-    placeholder: '请输入标题',
-    span: 24
-  },
-  {
-    prop: 'type',
-    label: '请假类型',
-    type: 'select',
-    required: true,
-    placeholder: '请选择请假类型',
-    span: 12,
-    options: leaveTypes
-  },
-  {
-    prop: 'leaveDays',
-    label: '请假天数',
-    type: 'input',
-    required: true,
-    placeholder: '请输入请假天数',
-    span: 12
-  },
-  {
-    prop: 'leaveTime',
-    label: '请假时间',
-    type: 'date',
-    required: true,
-    placeholder: '请选择请假时间',
-    span: 24
-  },
-  {
-    prop: 'reason',
-    label: '请假原因',
-    type: 'textarea',
-    required: true,
-    placeholder: '请输入请假原因',
-    span: 24
+    title: '请假信息',
+    fields: [
+      {
+        prop: 'applicant',
+        label: '请假人',
+        type: 'input',
+        required: true,
+        placeholder: '填写请假人姓名',
+        span: 12
+      },
+      {
+        prop: 'className',
+        label: '所在班级',
+        type: 'input',
+        required: true,
+        placeholder: '填写所属班级',
+        span: 12
+      },
+      {
+        prop: 'startTime',
+        label: '开始日期',
+        type: 'datetime',
+        required: true,
+        placeholder: '选择开始日期时间',
+        span: 12
+      },
+      {
+        prop: 'endTime',
+        label: '结束日期',
+        type: 'datetime',
+        required: true,
+        placeholder: '选择结束日期时间',
+        span: 12
+      },
+      {
+        prop: 'leaveDays',
+        label: '请假天数',
+        type: 'input',
+        required: true,
+        placeholder: '填写请假天数',
+        suffix: '天',
+        span: 12
+      },
+      {
+        prop: 'reason',
+        label: '请假事由',
+        type: 'textarea',
+        required: true,
+        placeholder: '填写请假原因',
+        rows: 3,
+        span: 24
+      },
+      {
+        prop: 'emergencyContact',
+        label: '紧急联系人',
+        type: 'input',
+        required: true,
+        placeholder: '填写紧急联络人姓名',
+        span: 12
+      },
+      {
+        prop: 'phone',
+        label: '手机',
+        type: 'input',
+        required: true,
+        placeholder: '填写联系电话',
+        span: 12
+      },
+      {
+        prop: 'attachments',
+        label: '附件',
+        type: 'upload',
+        span: 24,
+        limit: 3,
+        accept: 'image/*',
+        listType: 'picture-card',
+        tip: '上传证明材料（最多3张）'
+      }
+    ]
   }
 ]
 
 // 表单验证规则
 const formRules = {
   applicant: [
-    { required: true, message: '请输入发起人', trigger: 'blur' }
+    { required: true, message: '请输入请假人', trigger: 'blur' }
   ],
   className: [
-    { required: true, message: '请选择班级', trigger: 'change' }
+    { required: true, message: '请输入所在班级', trigger: 'blur' }
   ],
-  title: [
-    { required: true, message: '请输入标题', trigger: 'blur' }
+  startTime: [
+    { required: true, message: '请选择开始日期', trigger: 'change' }
   ],
-  type: [
-    { required: true, message: '请选择请假类型', trigger: 'change' }
+  endTime: [
+    { required: true, message: '请选择结束日期', trigger: 'change' }
   ],
   leaveDays: [
     { required: true, message: '请输入请假天数', trigger: 'blur' },
     { pattern: /^\d+$/, message: '请输入有效的天数', trigger: 'blur' }
   ],
-  leaveTime: [
-    { required: true, message: '请选择请假时间', trigger: 'change' }
-  ],
   reason: [
-    { required: true, message: '请输入请假原因', trigger: 'blur' },
-    { min: 10, message: '请假原因至少10个字符', trigger: 'blur' }
+    { required: true, message: '请输入请假事由', trigger: 'blur' }
+  ],
+  emergencyContact: [
+    { required: true, message: '请输入紧急联系人', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
   ]
 }
 
@@ -465,7 +509,7 @@ const formRef = computed(() => dialogRef.value?.formRef)
 
 // 对话框
 const dialogVisible = ref(false)
-const dialogTitle = ref('查看请假申请')
+const dialogTitle = ref('请假条')
 const dialogMode = ref('view')
 const formLabelWidth = '100px'
 
@@ -474,11 +518,13 @@ const formData = reactive({
   id: null,
   applicant: '',
   className: '',
-  title: '',
-  type: '',
+  startTime: '',
+  endTime: '',
   leaveDays: '',
-  leaveTime: '',
   reason: '',
+  emergencyContact: '',
+  phone: '',
+  attachments: [],
   applyTime: '',
   approvalStatus: 'pending',
   approver: ''
@@ -503,7 +549,7 @@ const handleExport = () => {
 // 查看
 const handleView = (row) => {
   dialogMode.value = 'view'
-  dialogTitle.value = '查看请假申请'
+  dialogTitle.value = '请假条'
   Object.assign(formData, row)
   dialogVisible.value = true
 }
@@ -511,7 +557,7 @@ const handleView = (row) => {
 // 审批
 const handleApprove = (row) => {
   dialogMode.value = 'approve'
-  dialogTitle.value = '审批请假申请'
+  dialogTitle.value = '审批请假条'
   Object.assign(formData, row)
   dialogVisible.value = true
 }
@@ -522,7 +568,7 @@ const isViewMode = computed(() => dialogMode.value === 'view' || dialogMode.valu
 // 审批通过
 const handleApproveSubmit = async () => {
   try {
-    await ElMessageBox.confirm('确定通过该请假申请？', '提示', {
+    await ElMessageBox.confirm('确定通过该请假条？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'success'

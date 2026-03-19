@@ -65,55 +65,60 @@ const tableActions = {
 // 表单字段
 const formFields = [
   {
-    prop: 'username',
-    label: '用户名',
-    type: 'input',
-    required: true,
-    span: 12
-  },
-  {
-    prop: 'name',
-    label: '姓名',
-    type: 'input',
-    required: true,
-    span: 12
-  },
-  {
-    prop: 'password',
-    label: '密码',
-    type: 'input',
-    inputType: 'password',
-    required: true,
-    span: 12
-  },
-  {
-    prop: 'role',
-    label: '角色',
-    type: 'select',
-    required: true,
-    span: 12,
-    options: [
-      { label: '管理员', value: 'admin' },
-      { label: '普通用户', value: 'user' }
+    title: '基本信息',
+    fields: [
+      {
+        prop: 'username',
+        label: '用户名',
+        type: 'input',
+        required: true,
+        span: 12
+      },
+      {
+        prop: 'name',
+        label: '姓名',
+        type: 'input',
+        required: true,
+        span: 12
+      },
+      {
+        prop: 'password',
+        label: '密码',
+        type: 'input',
+        inputType: 'password',
+        required: true,
+        span: 12
+      },
+      {
+        prop: 'role',
+        label: '角色',
+        type: 'select',
+        required: true,
+        span: 12,
+        options: [
+          { label: '管理员', value: 'admin' },
+          { label: '普通用户', value: 'user' }
+        ]
+      },
+      {
+        prop: 'status',
+        label: '状态',
+        type: 'radio',
+        required: true,
+        span: 12,
+        options: [
+          { label: '启用', value: '1' },
+          { label: '禁用', value: '0' }
+        ]
+      },
+      {
+        prop: 'remark',
+        label: '备注',
+        type: 'textarea',
+        span: 24,
+        rows: 3
+      }
     ]
-  },
-  {
-    prop: 'status',
-    label: '状态',
-    type: 'radio',
-    required: true,
-    span: 12,
-    options: [
-      { label: '启用', value: '1' },
-      { label: '禁用', value: '0' }
-    ]
-  },
-  {
-    prop: 'remark',
-    label: '备注',
-    type: 'textarea',
-    span: 24,
-    rows: 3
   }
 ]
 

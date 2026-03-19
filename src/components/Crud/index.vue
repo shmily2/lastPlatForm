@@ -44,32 +44,17 @@
                   :value="option.value"
                 />
               </el-select>
-              <!-- 日期选择器 -->
+              <!-- 日期类选择器（日期、月、周、范围） -->
               <el-date-picker
-                v-else-if="field.type === 'date'"
+                v-else-if="['date', 'month', 'week', 'daterange', 'datetimerange'].includes(field.type)"
                 v-model="searchForm[field.prop]"
-                type="date"
+                :type="field.type"
+                :format="field.type === 'week' ? 'YYYY年第w周' : field.format"
                 :placeholder="field.placeholder || `请选择${field.label}`"
-                clearable
-                style="width: 100%"
-              />
-              <!-- 月份选择器 -->
-              <el-date-picker
-                v-else-if="field.type === 'month'"
-                v-model="searchForm[field.prop]"
-                type="month"
-                :placeholder="field.placeholder || `请选择${field.label}`"
-                clearable
-                style="width: 100%"
-              />
-              <!-- 日期范围 -->
-              <el-date-picker
-                v-else-if="field.type === 'daterange'"
-                v-model="searchForm[field.prop]"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
+                :range-separator="field.rangeSeparator || '至'"
+                :start-placeholder="field.startPlaceholder || '开始日期'"
+                :end-placeholder="field.endPlaceholder || '结束日期'"
+                value-format="YYYY-MM-DD"
                 clearable
                 style="width: 100%"
               />
@@ -337,7 +322,7 @@ const detailData = ref({})
 const initSearchForm = () => {
   const form = {}
   props.searchFields.forEach(field => {
-    form[field.prop] = field.defaultValue || ''
+    form[field.prop] = field.defaultValue !== undefined ? field.defaultValue : ''
   })
   searchForm.value = form
 }

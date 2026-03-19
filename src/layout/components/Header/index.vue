@@ -5,13 +5,13 @@
       <div class="logo">
         <div class="logo-icon">
           <svg viewBox="0 0 64 64" width="32" height="32">
-            <circle cx="32" cy="32" r="30" fill="#52c41a"/>
+            <circle cx="32" cy="32" r="30" fill="#52c41a" />
             <text x="32" y="40" text-anchor="middle" fill="#fff" font-size="24" font-weight="bold">N</text>
           </svg>
         </div>
         <div class="logo-text">
-          <span class="school-name">南京中职高职学校</span>
-          <span class="school-name-en">Nanjing Secondary Vocational and Higher Vocational School</span>
+          <div><span class="school-name">产教融合智慧培养平台</span></div>
+          <span class="school-name-en">Industry-education integration and smart training platform</span>
         </div>
       </div>
     </div>
@@ -25,10 +25,7 @@
         </el-icon>
       </div>
       <div class="system-tabs">
-        <div
-          class="tab-item active"
-          @click="handleTabClick('intern')"
-        >
+        <div class="tab-item active" @click="handleTabClick('intern')">
           实习系统
         </div>
       </div>
@@ -38,15 +35,20 @@
     <div class="right">
       <div class="header-actions">
         <ThemePicker />
-        <el-tooltip content="二维码" placement="bottom">
-          <div class="action-icon">
-            <el-icon :size="20"><Cellphone /></el-icon>
-          </div>
-        </el-tooltip>
+        <el-popover placement="bottom" :width="260" trigger="click">
+          <template #reference>
+             <el-image :src="qrcodeUrl"></el-image>
+          </template>
+          <template #default>
+            <el-image :src="codePng"></el-image>
+          </template>
+        </el-popover>
         <el-dropdown @command="handleCommand">
           <span class="el-dropdown-link">
             <span class="username">您好，{{ userStore.name }}</span>
-            <el-icon><ArrowDown /></el-icon>
+            <el-icon>
+              <ArrowDown />
+            </el-icon>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
@@ -64,7 +66,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
-import { Cellphone, ArrowDown, Fold, Expand } from '@element-plus/icons-vue'
+import qrcodeUrl from '@/assets/qrcode.png'
+import codePng from '@/assets/code.png'
+import { ArrowDown, Fold, Expand } from '@element-plus/icons-vue'
 import ThemePicker from '../ThemePicker/index.vue'
 
 const emit = defineEmits('update:isCollapse')
@@ -133,7 +137,7 @@ const handleCommand = (command) => {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  width: 200px;
+  width: 350px;
 }
 
 .logo {
