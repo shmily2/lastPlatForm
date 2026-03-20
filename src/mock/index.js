@@ -163,22 +163,31 @@ const menus = [
         hidden: false,
         permissions: ['visit:plan:view']
       },
-      {
-        id: 62,
-        title: '领导巡访',
-        icon: 'Notebook',
-        path: '/visit/leader',
-        component: 'visit/record/index',
-        hidden: false,
-        permissions: ['visit:leader:view']
-      },
+      // {
+      //   id: 62,
+      //   title: '领导巡访',
+      //   icon: 'Notebook',
+      //   path: '/visit/leader',
+      //   component: 'visit/record/index',
+      //   hidden: false,
+      //   permissions: ['visit:leader:view']
+      // },
       {
         id: 63,
         title: '巡访审批',
         icon: 'DocumentChecked',
         path: '/visit/approval',
-        component: 'visit/record/index',
+        component: 'visit/approval/index',
         hidden: false,
+        permissions: ['visit:approval:view']
+      },
+      {
+        id: 64,
+        title: '审批详情',
+        lightPaht:"/visit/approval",
+        path: '/visit/approval/detail/:id?',
+        component: 'visit/approval/detail',
+        hidden: true,
         permissions: ['visit:approval:view']
       }
     ]
@@ -427,16 +436,65 @@ const menus = [
   }
 ]
 
-// 导出菜单数据和用户数据供其他模块使用
+// 组织架构树形数据（系部 -> 年级 -> 班级）
+const orgTree = [
+  { id: '艺术系', value: '艺术系', label: '艺术系', children: [
+    { id: '2020级', value: '2020级', label: '2020级', children: [
+      { id: '20艺术1班', value: '20艺术1班', label: '20艺术1班' },
+      { id: '20艺术2班', value: '20艺术2班', label: '20艺术2班' }
+    ]},
+    { id: '2021级', value: '2021级', label: '2021级', children: [
+      { id: '21艺术1班', value: '21艺术1班', label: '21艺术1班' }
+    ]}
+  ]},
+  { id: '服务系', value: '服务系', label: '服务系', children: [
+    { id: '2020级', value: '2020级', label: '2020级', children: [
+      { id: '20旅游1班', value: '20旅游1班', label: '20旅游1班' },
+      { id: '20酒店1班', value: '20酒店1班', label: '20酒店1班' }
+    ]}
+  ]},
+  { id: '工程系', value: '工程系', label: '工程系', children: [
+    { id: '2020级', value: '2020级', label: '2020级', children: [
+      { id: '20机电1班', value: '20机电1班', label: '20机电1班' },
+      { id: '20汽修1班', value: '20汽修1班', label: '20汽修1班' }
+    ]}
+  ]},
+  { id: '护理系', value: '护理系', label: '护理系', children: [
+    { id: '2020级', value: '2020级', label: '2020级', children: [
+      { id: '20护理1班', value: '20护理1班', label: '20护理1班' },
+      { id: '20护理2班', value: '20护理2班', label: '20护理2班' }
+    ]},
+    { id: '2021级', value: '2021级', label: '2021级', children: [
+      { id: '21护理1班', value: '21护理1班', label: '21护理1班' }
+    ]}
+  ]},
+  { id: '临床系', value: '临床系', label: '临床系', children: [
+    { id: '2020级', value: '2020级', label: '2020级', children: [
+      { id: '20临床1班', value: '20临床1班', label: '20临床1班' }
+    ]}
+  ]},
+  { id: '康复系', value: '康复系', label: '康复系', children: [
+    { id: '2020级', value: '2020级', label: '2020级', children: [
+      { id: '20康复1班', value: '20康复1班', label: '20康复1班' }
+    ]}
+  ]}
+]
+
+// 获取组织架构接口
+export function getOrgTree() {
+  return {
+    code: 200,
+    message: 'success',
+    data: orgTree
+  }
+}
+
+// 导出数据
 export { users, menus }
 
 // Mock拦截器设置
 export function setupMock(app) {
-  // 在Vite中使用mockjs进行拦截
   if (import.meta.env.DEV) {
-    app.config.globalProperties.$mock = {
-      users,
-      menus
-    }
+    app.config.globalProperties.$mock = { users, menus, orgTree }
   }
 }

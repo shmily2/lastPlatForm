@@ -190,18 +190,11 @@ const apiConfig = {
 
 // 搜索字段配置
 const searchFields = [
-  {
-    prop: 'internshipType',
-    label: '请选择组织架构',
-    type: 'select',
-    placeholder: '请选择组织架构',
-    options: [
-      { label: '全部', value: '' },
-      { label: '毕业实习', value: 'graduation' },
-      { label: '见习实习', value: 'probation' },
-      { label: '实习中', value: 'internship' }
-    ],
-    span: 5
+ {
+    prop: 'organization',
+    label: '组织架构',
+    type: 'organizational',
+    span: 4
   },
   {
     prop: 'internshipDirection',
@@ -214,22 +207,22 @@ const searchFields = [
       { label: '就业', value: 'employment' },
       { label: '升学', value: 'further' }
     ],
-    span: 5
+    span: 4
   },
   {
     prop: 'hospitalName',
     label: '选择医院',
     type: 'select',
     placeholder: '请选择医院',
-    options: hospitals.map(h => ({ label: h, value: h })),
-    span: 5
+    options: hospitals,
+    span: 4
   },
   {
     prop: 'keyword',
     label: '姓名/学号',
     type: 'input',
     placeholder: '请输入姓名或学号',
-    span: 5
+    span: 4
   }
 ]
 

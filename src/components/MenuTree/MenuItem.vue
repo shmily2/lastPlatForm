@@ -1,6 +1,6 @@
 <template>
   <template v-if="menu.children && menu.children.length > 0">
-    <el-sub-menu :index="menu.path">
+    <el-sub-menu :index="menu.path" v-if="!menu.hidden">
       <template #title>
         <el-icon v-if="menu.icon">
           <component :is="getIcon(menu.icon)" />
@@ -15,7 +15,7 @@
     </el-sub-menu>
   </template>
   <template v-else>
-    <el-menu-item :index="menu.path">
+    <el-menu-item :index="menu.path" v-if="!menu.hidden">
       <el-icon v-if="menu.icon">
         <component :is="getIcon(menu.icon)" />
       </el-icon>
@@ -55,3 +55,6 @@ const getIcon = (iconName) => {
   return iconMap[iconName] || Document
 }
 </script>
+<style scoped>
+
+</style>

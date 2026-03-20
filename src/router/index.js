@@ -44,7 +44,7 @@ router.beforeEach(async (to, from, next) => {
           console.log('已加载角色和路由，检查路由是否真的存在')
           // 检查路由是否真的在 router 中（刷新后 store 有数据但 router 没有）
           const allRoutes = router.getRoutes()
-          const hasDynamicRoutes = allRoutes.some(r => r.path.startsWith('/internship') || r.path.startsWith('/assignment') || r.path.startsWith('/leave'))
+          const hasDynamicRoutes = allRoutes.some(r => r.path.startsWith('/internship') || r.path.startsWith('/assignment') || r.path.startsWith('/leave') || r.path.startsWith('/visit'))
           console.log('动态路由是否存在:', hasDynamicRoutes)
 
           if (!hasDynamicRoutes) {
@@ -52,7 +52,7 @@ router.beforeEach(async (to, from, next) => {
             const accessRoutes = permissionStore.addRoutes
             accessRoutes.forEach(route => {
               console.log(`重新添加路由: ${route.path}`)
-              router.addRoute(route)
+              router.addRoute('/', route)
             })
             router.addRoute({
               path: '/:pathMatch(.*)*',

@@ -142,24 +142,18 @@ const apiConfig = {
 
 // 搜索字段配置
 const searchFields = [
-  {
+ {
     prop: 'organization',
     label: '组织架构',
-    type: 'select',
-    options: [
-      { label: '全部', value: '' },
-      { label: '南丁格尔护理学院', value: 'nursing' },
-      { label: '临床医学院', value: 'clinical' },
-      { label: '康复医学院', value: 'rehabilitation' }
-    ],
-    span: 6
+    type: 'organizational',
+    span: 4
   },
   {
     prop: 'month',
     label: '年月',
     type: 'month',
     placeholder: '请选择月份',
-    span: 6,
+    span: 4,
     valueFormat: 'YYYY-MM'
   },
   {

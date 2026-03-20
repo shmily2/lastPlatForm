@@ -125,21 +125,16 @@ function transformMenuToRoute(menus) {
     if (menu.children && menu.children.length > 0) {
       // 转换子路由，子路由路径应该是相对于父路由的
       const childrenRoutes = menu.children.map(child => {
-        const childPathParts = child.path.split('/').filter(p => p)
-        // 子路由路径不包含父路径，只使用最后一部分
-        const childRoutePath = childPathParts[childPathParts.length - 1] || ''
-
-        console.log(`转换子路由: ${child.title} -> path: ${childRoutePath}, component: ${child.component}`)
-
         return {
-          path: childRoutePath,
+          path: child.path,
           name: child.name || child.path.replace(/\//g, ''),
           component: getComponentPath(child.component),
           meta: {
             title: child.title,
             icon: child.icon,
             hidden: child.hidden,
-            permissions: child.permissions
+            permissions: child.permissions,
+            lightPaht:child.lightPaht,
           }
         }
       })

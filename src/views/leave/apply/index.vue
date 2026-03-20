@@ -320,12 +320,10 @@ const apiConfig = {
 
 // 搜索字段配置
 const searchFields = [
-  {
-    prop: 'className',
-    label: '请选择组织架构',
-    type: 'select',
-    placeholder: '请选择组织架构',
-    options: classes.map(c => ({ label: c, value: c })),
+   {
+    prop: 'organization',
+    label: '组织架构',
+    type: 'organizational',
     span: 4
   },
   {

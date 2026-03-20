@@ -4,7 +4,7 @@
       :default-active="activeMenu"
       :collapse="isCollapse"
       :unique-opened="true"
-      :collapse-transition="false"
+      :collapse-transition="true"
       mode="vertical"
       :background-color="themeColor"
       text-color="rgba(255, 255, 255, 0.85)"
@@ -69,7 +69,10 @@ const menuList = computed(() => {
   return menus
 })
 
-const activeMenu = computed(() => route.path)
+// 当前激活的菜单
+const activeMenu = computed(() => {
+  return route.meta.lightPaht ? route.meta.lightPaht : route.path
+})
 
 // 监听 menuList 变化
 watch(menuList, (newVal) => {
@@ -120,5 +123,8 @@ const handleSelect = (index) => {
 
 :deep(.el-sub-menu .el-menu-item.is-active) {
   background-color: rgba(255, 255, 255, 0.2) !important;
+}
+:deep(.el-sub-menu.is-active >.el-sub-menu__title){
+ background-color: rgba(255, 255, 255, 0.2) !important;
 }
 </style>

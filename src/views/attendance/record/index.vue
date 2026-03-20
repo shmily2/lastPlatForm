@@ -219,22 +219,15 @@ const searchFields = [
   {
     prop: 'organization',
     label: '组织架构',
-    type: 'select',
-    options: [
-      { label: '全部', value: '' },
-      { label: '护理系', value: 'nursing' },
-      { label: '临床系', value: 'clinical' },
-      { label: '康复系', value: 'rehabilitation' },
-      { label: '旅游管理系', value: 'tourism' }
-    ],
-    span: 6
+    type: 'organizational',
+    span: 4
   },
   {
     prop: 'keyword',
     label: '关键字',
     type: 'input',
     placeholder: '请输入关键字',
-    span: 6
+    span:  4
   },
   {
     prop: 'status',
@@ -247,13 +240,13 @@ const searchFields = [
       { label: '迟到', value: 'late' },
       { label: '早退', value: 'early' }
     ],
-    span: 6
+    span:  4
   },
   {
     prop: 'date',
     label: '请选择日期',
     type: 'date',
-    span: 6
+    span:  4
   }
 ]
 

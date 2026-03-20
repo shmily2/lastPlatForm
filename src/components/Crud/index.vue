@@ -44,6 +44,18 @@
                   :value="option.value"
                 />
               </el-select>
+            <!-- 组织架构 -->
+              <el-tree-select
+                v-else-if="field.type === 'organizational'"
+                v-model="searchForm[field.prop]"
+                :data="orgTree"
+                placeholder="请搜索组织架构"
+                clearable
+                filterable
+                check-strictly
+                :render-after-expand="false"
+                style="width: 100%"
+              />
               <!-- 日期类选择器（日期、月、周、范围） -->
               <el-date-picker
                 v-else-if="['date', 'month', 'week', 'daterange', 'datetimerange'].includes(field.type)"
@@ -187,7 +199,7 @@ import { Search, Refresh, Plus, Delete, Download } from '@element-plus/icons-vue
 import BaseTable from '../Table/index.vue'
 import BaseDialog from '../Dialog/index.vue'
 import BaseDetail from '../Detail/index.vue'
-
+import { getOrgTree } from '@/mock/index'
 const props = defineProps({
   // 是否显示搜索
   showSearch: {
@@ -507,9 +519,17 @@ const handleCurrentChange = (page) => {
 const refresh = () => {
   getList()
 }
-
+const orgTree=ref([])
 // 初始化
-onMounted(() => {
+onMounted(async() => {
+   try {
+    const res = await getOrgTree()
+    if (res.code === 200) {
+      orgTree.value = res.data
+    }
+  } catch (e) {
+    console.error('加载组织架构失败:', e)
+  }
   console.log('Crud 组件挂载，开始初始化')
   initSearchForm()
   isMounted.value = true

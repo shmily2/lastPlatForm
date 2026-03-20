@@ -10,17 +10,11 @@
       <div class="filter-content">
         <div class="filter-item">
           <span class="filter-label">组织架构：</span>
-          <el-select
+          <OrgSelector
             v-model="filters.organization"
             placeholder="请选择组织架构"
-            clearable
             style="width: 200px"
-          >
-            <el-option label="全部" value="" />
-            <el-option label="护理系" value="nursing" />
-            <el-option label="临床系" value="clinical" />
-            <el-option label="康复系" value="rehabilitation" />
-          </el-select>
+          />
         </div>
 
         <div class="filter-item">
@@ -97,6 +91,7 @@ import { ref, reactive, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
+import OrgSelector from '@/components/OrgSelector/index.vue'
 
 // 视图模式
 const viewMode = ref('chart')
