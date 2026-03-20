@@ -111,6 +111,10 @@
             <el-rate v-else-if="field.type === 'rate'" v-model="formData[field.prop]" :max="field.max || 5"
               :texts="['不及格', '及格', '中等', '良好', '优秀']" show-text
               :disabled="field.disabled || disabled" />
+            <el-button v-else-if="field.type === 'button'" type="primary"
+              :disabled="field.disabled || disabled" @click="field.click">
+              {{ field.text || '点击' }}
+            </el-button>
             <!-- hideDelete时用查看模式展示图片 -->
             <div v-if="field.type === 'upload' && field.hideDelete && formData[field.prop] && formData[field.prop].length" class="view-upload-list">
               <el-image v-for="(file, index) in formData[field.prop]" :key="index"
@@ -420,8 +424,7 @@ defineExpose({
   }
 
   .el-upload {
-    margin-top: 12px;
-    margin-left: 12px;
+    margin:12px;
   }
 }
 
