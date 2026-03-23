@@ -285,10 +285,16 @@ const validate = () => {
   return formRef.value?.validate()
 }
 
+// 清除所有签名
+const clearAllSignatures = () => {
+  formRef.value?.clearAllSignatures()
+}
+
 // 暴露方法
 defineExpose({
   resetForm,
   validate,
+  clearAllSignatures,
   formRef
 })
 </script>

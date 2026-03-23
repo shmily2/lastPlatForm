@@ -272,7 +272,16 @@ const menus = [
         component: 'personnel/class/index',
         hidden: false,
         permissions: ['personnel:class:view']
-      }
+      },
+      {
+        id: 84,
+        title: '信息采集',
+        icon: 'OfficeBuilding',
+        path: '/personnel/class',
+        component: 'personnel/class/index',
+        hidden: false,
+        permissions: ['personnel:class:view']
+      },
     ]
   },
   {
@@ -294,19 +303,20 @@ const menus = [
       },
       {
         id: 92,
-        title: '实习总结',
+        title: '返校记录',
         icon: 'Files',
-        path: '/record/summary',
-        component: 'record/summary/index',
+        path: '/record/backtoschool',
+
+        component: 'record/backtoschool/index',
         hidden: false,
         permissions: ['record:summary:view']
       },
       {
         id: 93,
-        title: '学生访谈记录',
+        title: '学生联系情况',
         icon: 'Files',
-        path: '/record/interview',
-        component: 'record/interview/index',
+        path: '/record/StudentInformation',
+        component: 'record/StudentInformation/index',
         hidden: false,
         permissions: ['record:interview:view']
       },
@@ -328,6 +338,15 @@ const menus = [
         hidden: false,
         permissions: ['record:case:view']
       },
+        {
+        id: 97,
+        title: '违规处理',
+        icon: 'Files',
+        path: '/record/evaluation',
+        component: 'record/evaluation/index',
+        hidden: false,
+        permissions: ['record:evaluation:view']
+      },
       {
         id: 96,
         title: '单位考评意见',
@@ -336,12 +355,21 @@ const menus = [
         component: 'record/evaluation/index',
         hidden: false,
         permissions: ['record:evaluation:view']
-      }
+      },
+          {
+        id: 98,
+        title: '实习总结列表',
+        icon: 'Files',
+        path: '/record/evaluation',
+        component: 'record/evaluation/index',
+        hidden: false,
+        permissions: ['record:evaluation:view']
+      },
     ]
   },
   {
     id: 10,
-    title: '院系实习总结',
+    title: '问卷调查',
     icon: 'Memo',
     path: '/summary',
     hidden: false,
@@ -417,7 +445,7 @@ const menus = [
   },
   {
     id: 14,
-    title: '医院信息管理',
+    title: '企业信息',
     icon: 'FirstAidKit',
     path: '/hospital',
     hidden: false,
@@ -425,13 +453,59 @@ const menus = [
     children: [
       {
         id: 141,
-        title: '实习医院',
+        title: '企业管理',
         icon: 'List',
         path: '/hospital/list',
         component: 'hospital/list/index',
         hidden: false,
         permissions: ['hospital:list:view']
       }
+    ]
+  },
+   {
+    id: 15,
+    title: '基础设置',
+    icon: 'Setting',
+    path: '/setting',
+    hidden: false,
+    permissions: ['setting:*:*'],
+    children: [
+      {
+        id: 151,
+        title: '组织架构',
+        icon: 'List',
+        path: '/setting/org',
+        component: 'setting/org/index',
+        hidden: false,
+        permissions: ['hospital:list:view']
+      },
+       {
+        id: 152,
+        title: '信息采集',
+        icon: 'List',
+        path: '/setting/info',
+        component: 'setting/info/index',
+        hidden: false,
+        permissions: ['setting:info:view']
+      },
+        {
+        id: 153,
+        title: '菜单管理',
+        icon: 'List',
+        path: '/setting/menu',
+        component: 'setting/menu/index',
+        hidden: false,
+        permissions: ['setting:menu:view']
+      },
+          {
+        id: 154,
+        title: '角色管理',
+        icon: 'List',
+        path: '/setting/role',
+        component: 'setting/role/index',
+        hidden: false,
+        permissions: ['setting:role:view']
+      },
     ]
   }
 ]

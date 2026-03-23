@@ -20,6 +20,17 @@
                     :initial-index="index" fit="cover"
                     style="width: 80px; height: 80px; margin-right: 8px; border-radius: 4px; cursor: pointer;" />
                 </template>
+                <template v-else-if="(field.type === 'signature' || field.type === 'image') && formData[field.prop]">
+                  <template v-if="Array.isArray(formData[field.prop])">
+                    <el-image v-for="(file, index) in formData[field.prop]" :key="index"
+                      :src="file.url || file.response?.url || file" fit="cover"
+                      style="width: 80px; height: 80px; margin-right: 8px; border-radius: 4px;" />
+                  </template>
+                  <template v-else>
+                    <img :src="formData[field.prop]" style="max-width: 200px; max-height: 100px; border-radius: 4px; border: 1px solid #dcdfe6;"
+                      @error="(e) => { e.target.style.display = 'none'; e.target.parentElement.innerText = '签名加载失败' }" />
+                  </template>
+                </template>
                 <template v-else-if="field.type === 'select'">
                   {{ getSelectLabel(field, formData[field.prop]) }}
                 </template>
@@ -65,6 +76,15 @@
               :rows="field.rows || 4" :placeholder="field.placeholder || `请输入${field.label}`"
               :maxlength="field.maxlength" :show-word-limit="field.showWordLimit"
               :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%" />
+            <!-- 签名板 -->
+            <div v-else-if="field.type === 'signature'" class="signature-pad" :id="'signature-container-' + field.prop">
+              <canvas :id="'signature-canvas-' + field.prop"
+                style="width: 100%; height: 150px; border: 1px solid #dcdfe6; border-radius: 4px; background: #fff;"></canvas>
+              <div class="signature-actions" style="margin-top: 8px;">
+                <el-button size="small" @click="clearSignature(field.prop)">清除</el-button>
+                <el-button size="small" type="primary" @click="saveSignature(field.prop)">确认签名</el-button>
+              </div>
+            </div>
             <el-select v-else-if="field.type === 'select'" v-model="formData[field.prop]"
               :placeholder="field.placeholder || `请选择${field.label}`" :clearable="field.clearable !== false"
               :disabled="field.disabled || disabled" :filterable="field.filterable" :multiple="field.multiple"
@@ -115,12 +135,31 @@
               :disabled="field.disabled || disabled" @click="field.click">
               {{ field.text || '点击' }}
             </el-button>
-            <!-- hideDelete时用查看模式展示图片 -->
-            <div v-if="field.type === 'upload' && field.hideDelete && formData[field.prop] && formData[field.prop].length" class="view-upload-list">
+            <!-- hideDelete或disabled时用查看模式展示图片 -->
+            <div v-if="field.type === 'upload' && (field.hideDelete || field.disabled || disabled) && formData[field.prop] && formData[field.prop].length" class="view-upload-list">
               <el-image v-for="(file, index) in formData[field.prop]" :key="index"
                 :src="file.url || file.response?.url" :preview-src-list="getPreviewList(field.prop)"
                 :initial-index="index" fit="cover"
                 style="width: 80px; height: 80px; margin-right: 8px; border-radius: 4px; cursor: pointer;" />
+            </div>
+            <!-- 直接图片展示类型 -->
+            <div v-if="field.type === 'image' && formData[field.prop]" class="view-upload-list">
+              <template v-if="Array.isArray(formData[field.prop])">
+                <el-image v-for="(file, index) in formData[field.prop]" :key="index"
+                  :src="file.url || file.response?.url || file" :preview-src-list="getPreviewList(field.prop)"
+                  :initial-index="index" fit="cover"
+                  style="width: 80px; height: 80px; margin-right: 8px; border-radius: 4px; cursor: pointer;" />
+              </template>
+              <template v-else-if="String(formData[field.prop]).startsWith('data:image')">
+                <!-- base64图片使用原生img标签显示 -->
+                <img :src="formData[field.prop]"
+                  style="max-width: 200px; max-height: 100px; border-radius: 4px; border: 1px solid #dcdfe6;" />
+              </template>
+              <template v-else>
+                <el-image :src="formData[field.prop]"
+                  fit="cover"
+                  style="max-width: 200px; max-height: 100px; border-radius: 4px;" />
+              </template>
             </div>
             <el-upload v-else-if="field.type === 'upload'" v-model:file-list="formData[field.prop]"
               :action="field.action || '#'" :auto-upload="false" :list-type="field.listType || 'text'"
@@ -155,9 +194,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { ElImageViewer } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import SignaturePad from 'signature_pad'
 
 
 const props = defineProps({
@@ -231,6 +271,79 @@ const isGrouped = computed(() => {
   return props.fields.length > 0 && props.fields[0]?.title !== undefined
 })
 
+// 签名板相关
+const signaturePads = ref({})
+
+// 初始化签名板
+const initSignaturePad = (field) => {
+  nextTick(() => {
+    const canvasId = 'signature-canvas-' + field.prop
+    const canvas = document.getElementById(canvasId)
+    if (!canvas) {
+      // 延迟重试
+      setTimeout(() => initSignaturePad(field), 100)
+      return
+    }
+
+    // 设置画布尺寸
+    const rect = canvas.getBoundingClientRect()
+    canvas.width = rect.width || canvas.offsetWidth || 400
+    canvas.height = 150
+
+    // 清除旧的签名板实例
+    if (signaturePads.value[field.prop]) {
+      try {
+        signaturePads.value[field.prop].off()
+      } catch (e) {}
+      delete signaturePads.value[field.prop]
+    }
+
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: 'rgb(255, 255, 255)',
+      penColor: 'rgb(0, 0, 0)'
+    })
+    signaturePads.value[field.prop] = signaturePad
+
+    // 如果已有签名数据，加载显示
+    if (formData.value[field.prop] && formData.value[field.prop].startsWith('data:')) {
+      try {
+        signaturePad.fromDataURL(formData.value[field.prop])
+      } catch (e) {
+        console.warn('加载签名失败:', e)
+      }
+    }
+  })
+}
+
+// 监听弹框显示状态，初始化签名板
+watch(() => props.modelValue, () => {
+  // 延迟初始化，确保 DOM 已渲染
+  setTimeout(() => {
+    props.fields.forEach(group => {
+      group.fields.forEach(field => {
+        if (field.type === 'signature') {
+          // 每次打开弹框都重新初始化
+          initSignaturePad(field)
+        }
+      })
+    })
+  }, 300)
+}, { immediate: true, deep: true })
+
+const clearSignature = (prop) => {
+  if (signaturePads.value[prop]) {
+    signaturePads.value[prop].clear()
+    formData.value[prop] = ''
+  }
+}
+
+const saveSignature = (prop) => {
+  if (signaturePads.value[prop]) {
+    const dataUrl = signaturePads.value[prop].toDataURL()
+    formData.value[prop] = dataUrl
+  }
+}
+
 // 获取选择器的显示文本
 const getSelectLabel = (field, value) => {
   if (!value) return '-'
@@ -242,8 +355,16 @@ const getSelectLabel = (field, value) => {
 // 获取图片预览列表（支持左右滑动连续预览）
 const getPreviewList = (prop) => {
   const files = formData.value[prop]
-  if (!files || !files.length) return []
-  return files.map(file => file.url || file.response?.url)
+  if (!files) return []
+  // 如果是数组
+  if (Array.isArray(files)) {
+    return files.map(file => file.url || file.response?.url || file)
+  }
+  // 如果是单个字符串（单个图片URL）
+  if (typeof files === 'string' && files.startsWith('data:')) {
+    return [files]
+  }
+  return []
 }
 
 // 处理照片墙预览
@@ -282,8 +403,29 @@ const handleCancel = () => {
 }
 
 // 验证表单
-const validate = () => {
-  return formRef.value?.validate()
+const validate = async () => {
+  // 先处理 signature 类型字段的校验
+  const signatureFields = []
+  props.fields.forEach(group => {
+    group.fields.forEach(field => {
+      if (field.type === 'signature' && field.required) {
+        signatureFields.push(field.prop)
+      }
+    })
+  })
+  
+  // 检查签名是否填写
+  for (const prop of signatureFields) {
+    if (!formData.value[prop]) {
+      return Promise.reject(new Error('请签名后再审批'))
+    }
+  }
+  
+  // 继续默认的表单校验
+  if (formRef.value) {
+    return formRef.value.validate()
+  }
+  return Promise.resolve()
 }
 
 // 重置字段
@@ -296,11 +438,21 @@ const clearValidate = (props) => {
   formRef.value?.clearValidate(props)
 }
 
+// 清除所有签名
+const clearAllSignatures = () => {
+  Object.keys(signaturePads.value).forEach(prop => {
+    if (signaturePads.value[prop]) {
+      signaturePads.value[prop].clear()
+    }
+  })
+}
+
 // 暴露方法
 defineExpose({
   validate,
   resetFields,
   clearValidate,
+  clearAllSignatures,
   formRef
 })
 </script>
@@ -514,6 +666,15 @@ defineExpose({
 
 .upload-hidden .el-upload__tip {
   display: none;
+}
+/* 签名板样式 */
+.signature-pad{
+  width:100%;
+}
+.signature-actions{
+  display: flex;
+    justify-content: flex-end;
+    padding: 10px;
 }
 
 /* 移动端表单按钮调整 */
