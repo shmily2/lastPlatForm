@@ -377,13 +377,22 @@ const menus = [
     children: [
       {
         id: 101,
-        title: '院系实习总结',
+        title: '问卷计划',
         icon: 'Edit',
         path: '/summary/fill',
         component: 'summary/fill/index',
         hidden: false,
         permissions: ['summary:fill:view']
-      }
+      },
+        {
+        id: 102,
+        title: '问卷模板',
+        icon: 'Document',
+        path: '/summary/template',
+        component: 'summary/template/index',
+        hidden: false,
+        permissions: ['summary:template:view']
+      },
     ]
   },
   {
@@ -402,7 +411,25 @@ const menus = [
         component: 'content/notice/index',
         hidden: false,
         permissions: ['content:notice:view']
-      }
+      },
+        {
+        id: 112,
+        title: 'APP轮播图',
+        icon: 'Management',
+        path: '/content/carousel',
+        component: 'content/carousel/index',
+        hidden: false,
+        permissions: ['content:carousel:view']
+      },
+      {
+        id: 113,
+        title: '新手指导',
+        icon: 'Management',
+        path: '/content/guide',
+        component: 'content/guide/index',
+        hidden: false,
+        permissions: ['content:guide:view']
+      },
     ]
   },
   {
@@ -436,11 +463,30 @@ const menus = [
         id: 131,
         title: '表格下载',
         icon: 'List',
-        path: '/download/list',
-        component: 'download/list/index',
+        path: '/download',
+        component: 'download/index',
         hidden: false,
         permissions: ['download:list:view']
       }
+    ]
+  },
+   {
+    id: 16,
+    title: '抽查管理',
+    icon: 'spotCheck',
+    path: '/spotCheck',
+    hidden: false,
+    permissions: ['spotCheck:*:*'],
+    children: [
+          {
+        id: 161,
+        title: '抽查记录',
+        icon: 'Check',
+        path: '/spotCheck/record',
+        component: 'spotCheck/record/index',
+        hidden: false,
+        permissions: ['spotCheck:record:view']
+      },
     ]
   },
   {
@@ -453,7 +499,7 @@ const menus = [
     children: [
       {
         id: 141,
-        title: '企业管理',
+        title: '实习企业',
         icon: 'List',
         path: '/hospital/list',
         component: 'hospital/list/index',

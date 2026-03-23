@@ -733,7 +733,5 @@ const handleCurrentChange = (page) => {
 </script>
 
 <style scoped>
-.approval-page {
-  padding: 10px;
-}
+
 </style>
