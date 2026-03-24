@@ -12,11 +12,16 @@
       :table-columns="tableColumns"
       :show-index="true"
       :show-actions="true"
-      :table-actions="{}"
-      :actions="{}"
+      :table-actions="{ view: true, edit: true, delete: true }"
+      :actions="{ add: false, batchDelete: false, export: true, refresh: true }"
       :page-sizes="[10, 20, 50, 100]"
       :api="apiConfig"
       :show-search="true"
+      @search="handleSearch"
+      @refresh="handleRefresh"
+      @view="handleView"
+      @edit="handleEdit"
+      @delete="handleDelete"
     >
       <!-- 自定义操作按钮 -->
       <template #extra-operations>
@@ -26,38 +31,55 @@
 
       <!-- 自定义操作列 -->
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleDownload(row)">下载</el-button>
+        <el-button type="primary" link @click="handleView(row)">查看</el-button>
+        <el-button type="success" link @click="handleEdit(row)">下载</el-button>
         <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
       </template>
     </Crud>
 
-    <!-- 上传对话框 -->
-    <el-dialog v-model="uploadVisible" title="上传文件" width="500px">
-      <el-upload
-        class="upload-demo"
-        drag
-        action="#"
-        :auto-upload="false"
-      >
-        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-      </el-upload>
-      <template #footer>
-        <el-button @click="uploadVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleUploadConfirm">确定</el-button>
-      </template>
-    </el-dialog>
+    <!-- 查看/编辑对话框 -->
+    <Dialog
+      ref="dialogRef"
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="600px"
+      :show-footer="!isView"
+      @confirm="handleSubmit"
+    >
+      <BaseForm
+        v-model="formData"
+        :fields="formFields"
+        :rules="formRules"
+        label-width="100px"
+      />
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UploadFilled } from '@element-plus/icons-vue'
 import Crud from '@/components/Crud/index.vue'
+import Dialog from '@/components/Dialog/index.vue'
+import BaseForm from '@/components/Form/index.vue'
 
 const crudRef = ref(null)
-const uploadVisible = ref(false)
+const dialogRef = ref(null)
+const dialogVisible = ref(false)
+const dialogTitle = ref('')
+const isView = ref(false)
+
+// 模拟数据
+const mockData = [
+  { id: 1, name: '实习协议模板.docx', type: 'Word', size: '25KB', createTime: '2025-03-20 10:30:00', user: '管理员' },
+  { id: 2, name: '实习报告模板.docx', type: 'Word', size: '18KB', createTime: '2025-03-18 14:20:00', user: '管理员' },
+  { id: 3, name: '三方协议.pdf', type: 'PDF', size: '156KB', createTime: '2025-03-15 09:15:00', user: '管理员' },
+  { id: 4, name: '实习安全承诺书.docx', type: 'Word', size: '15KB', createTime: '2025-03-10 16:45:00', user: '教师' },
+  { id: 5, name: '实习鉴定表.xlsx', type: 'Excel', size: '32KB', createTime: '2025-03-05 11:20:00', user: '管理员' },
+  { id: 6, name: '实习周记模板.docx', type: 'Word', size: '12KB', createTime: '2025-03-01 14:10:00', user: '教师' },
+  { id: 7, name: '就业推荐表.pdf', type: 'PDF', size: '89KB', createTime: '2025-02-28 10:00:00', user: '管理员' },
+  { id: 8, name: '实习证明模板.docx', type: 'Word', size: '20KB', createTime: '2025-02-25 15:30:00', user: '管理员' }
+]
 
 // 搜索字段
 const searchFields = [
@@ -76,33 +98,61 @@ const tableColumns = [
 // API配置
 const apiConfig = {
   list: (params) => {
-    const mockData = [
-      { id: 1, type: '📄', name: '实习协议模板.docx', createTime: '2025-03-20 10:30:00', size: '25KB', user: '管理员' },
-      { id: 2, type: '📄', name: '实习报告模板.docx', createTime: '2025-03-18 14:20:00', size: '18KB', user: '管理员' },
-      { id: 3, type: '📕', name: '三方协议.pdf', createTime: '2025-03-15 09:15:00', size: '156KB', user: '管理员' },
-      { id: 4, type: '📄', name: '实习安全承诺书.docx', createTime: '2025-03-10 16:45:00', size: '15KB', user: '教师' },
-      { id: 5, type: '📊', name: '实习鉴定表.xlsx', createTime: '2025-03-05 11:20:00', size: '32KB', user: '管理员' }
-    ]
+    let result = [...mockData]
+    if (params.name) {
+      result = result.filter(item => item.name.includes(params.name))
+    }
+    const pageNum = params.pageNum || 1
+    const pageSize = params.pageSize || 10
+    const start = (pageNum - 1) * pageSize
+    const end = start + pageSize
     return {
       code: 200,
       data: {
-        list: mockData,
-        total: mockData.length
+        list: result.slice(start, end),
+        total: result.length
       }
     }
   }
 }
 
-// 上传文件
-const handleUpload = () => {
-  uploadVisible.value = true
+// 表单字段
+const formFields = [
+  { prop: 'name', label: '文件名', type: 'input', placeholder: '请输入文件名' },
+  { prop: 'type', label: '文件类型', type: 'select', placeholder: '请选择文件类型',
+    options: [
+      { label: 'Word', value: 'Word' },
+      { label: 'Excel', value: 'Excel' },
+      { label: 'PDF', value: 'PDF' },
+      { label: '其他', value: '其他' }
+    ]
+  }
+]
+
+// 表单校验规则
+const formRules = {
+  name: [{ required: true, message: '请输入文件名', trigger: 'blur' }]
 }
 
-// 上传确认
-const handleUploadConfirm = () => {
-  ElMessage.success('上传成功')
-  uploadVisible.value = false
+// 表单数据
+const formData = reactive({
+  name: '',
+  type: ''
+})
+
+// 搜索
+const handleSearch = (params) => {
+  console.log('搜索:', params)
+}
+
+// 刷新
+const handleRefresh = () => {
   crudRef.value?.refresh()
+}
+
+// 上传文件
+const handleUpload = () => {
+  ElMessage.info('上传文件功能')
 }
 
 // 新建文件夹
@@ -110,8 +160,16 @@ const handleNewFolder = () => {
   ElMessage.info('新建文件夹功能')
 }
 
-// 下载
-const handleDownload = (row) => {
+// 查看
+const handleView = (row) => {
+  dialogTitle.value = '查看文件'
+  isView.value = true
+  Object.assign(formData, row)
+  dialogVisible.value = true
+}
+
+// 编辑/下载
+const handleEdit = (row) => {
   ElMessage.success('开始下载: ' + row.name)
 }
 
@@ -126,9 +184,21 @@ const handleDelete = (row) => {
     crudRef.value?.refresh()
   }).catch(() => {})
 }
+
+// 提交
+const handleSubmit = () => {
+  ElMessage.success('操作成功')
+  dialogVisible.value = false
+  crudRef.value?.refresh()
+}
 </script>
 
 <style scoped>
-.page-container { padding: 20px; }
-.mb-20 { margin-bottom: 20px; }
+.page-container {
+  padding: 20px;
+}
+
+.mb-20 {
+  margin-bottom: 20px;
+}
 </style>
