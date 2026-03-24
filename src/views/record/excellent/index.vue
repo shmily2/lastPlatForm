@@ -40,4 +40,3 @@ const tableColumns = [
 const apiConfig = { list: '/api/record/excellent/list' }
 const handleAdd = () => {}
 </script>
-<style scoped>.page-container{padding:20px}</style>

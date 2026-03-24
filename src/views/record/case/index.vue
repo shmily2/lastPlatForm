@@ -39,4 +39,3 @@ const tableColumns = [
 const apiConfig = { list: '/api/record/case/list' }
 const handleAdd = () => {}
 </script>
-<style scoped>.page-container{padding:20px}</style>

@@ -135,15 +135,15 @@ const menus = [
         hidden: false,
         permissions: ['report:monthly:view']
       },
-      // {
-      //   id: 53,
-      //   title: '科室实习手册',
-      //   icon: 'DocumentChecked',
-      //   path: '/report/review',
-      //   component: 'report/review/index',
-      //   hidden: false,
-      //   permissions: ['report:review:view']
-      // }
+      {
+        id: 53,
+        title: '周月报表单配置',
+        icon: 'DocumentChecked',
+        path: '/report/form-configuration',
+        component: 'report/form-configuration/index',
+        hidden: false,
+        permissions: ['report:review:view']
+      }
     ]
   },
   {
@@ -342,10 +342,10 @@ const menus = [
         id: 97,
         title: '违规处理',
         icon: 'Files',
-        path: '/record/evaluation',
-        component: 'record/evaluation/index',
+        path: '/record/violation',
+        component: 'record/violation/index',
         hidden: false,
-        permissions: ['record:evaluation:view']
+        permissions: ['record:violation:view']
       },
       {
         id: 96,
@@ -358,12 +358,12 @@ const menus = [
       },
           {
         id: 98,
-        title: '实习总结列表',
+        title: '实习总结',
         icon: 'Files',
-        path: '/record/evaluation',
-        component: 'record/evaluation/index',
+        path: '/record/internship-summary',
+        component: 'record/internship-summary/index',
         hidden: false,
-        permissions: ['record:evaluation:view']
+        permissions: ['record:internship-summary:view']
       },
     ]
   },
@@ -388,10 +388,19 @@ const menus = [
         id: 102,
         title: '问卷模板',
         icon: 'Document',
-        path: '/summary/template',
-        component: 'summary/template/index',
+        path: '/questionnaire/template',
+        component: 'questionnaire/template/index',
         hidden: false,
         permissions: ['summary:template:view']
+      },
+      {
+        id: 103,
+        title: '编辑问卷模板',
+        icon: 'Edit',
+        path: '/questionnaire/template/edit',
+        component: 'questionnaire/template/edit',
+        hidden: true,
+        permissions: ['summary:template:edit']
       },
     ]
   },

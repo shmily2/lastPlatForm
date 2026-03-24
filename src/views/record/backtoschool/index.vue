@@ -60,6 +60,3 @@ const handleDelete = (row) => {
 }
 </script>
 
-<style scoped>
-.page-container { padding: 20px; }
-</style>

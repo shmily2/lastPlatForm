@@ -12,7 +12,7 @@
           <el-col v-for="field in group.fields" :key="field.prop" :xs="24"
             :sm="field.span && field.span <= 12 ? 12 : 24" :md="field.span || 12">
             <div class="info-item">
-              <div class="info-label">{{ field.label }}</div>
+              <div class="info-label" :style="{ width: labelWidth}">{{ field.label }}</div>
               <div class="info-value">
                 <template v-if="field.type === 'upload' && formData[field.prop] && formData[field.prop].length">
                   <el-image v-for="(file, index) in formData[field.prop]" :key="index"
@@ -508,8 +508,6 @@ defineExpose({
 }
 
 .info-label {
-  width: 130px;
-  min-width: 130px;
   padding-right: 16px;
   color: #909399;
   font-size: 14px;

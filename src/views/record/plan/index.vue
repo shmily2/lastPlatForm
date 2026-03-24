@@ -28,19 +28,18 @@
 
     <!-- 新增/编辑对话框 -->
     <Dialog
+      ref="dialogRef"
       v-model="dialogVisible"
       :title="dialogTitle"
       width="700px"
+      :show-form="true"
+      :form-data="formData"
+      :form-fields="formFields"
+      :form-rules="formRules"
+      form-label-width="100px"
+      @update:form-data="formData = $event"
       @confirm="handleSubmit"
-    >
-      <Form
-        ref="formRef"
-        v-model="formData"
-        :fields="formFields"
-        :rules="formRules"
-        label-width="100px"
-      />
-    </Dialog>
+    />
   </div>
 </template>
 
@@ -49,17 +48,16 @@ import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import Crud from '@/components/Crud/index.vue'
 import Dialog from '@/components/Dialog/index.vue'
-import Form from '@/components/Form/index.vue'
 
 const crudRef = ref(null)
-const formRef = ref(null)
+const dialogRef = ref(null)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const currentRow = ref(null)
 
 // 模拟数据
 const mockData = [
-  { id: 1, className: '520112', teacherId: '11516', teacherName: '童瑞', title: '520112工作计划', planTime: '2025-03-02 00:00:00', createTime: '2025-10-31 12:32:49' },
+  { id: 1, className: '520112', teacherId: '11516', teacherName: '童瑞', title: '520112工作计划', planTime:['2025-03-02 00:00:00', '2025-03-02 00:00:00'], createTime: '2025-10-31 12:32:49' },
   { id: 2, className: '520331', teacherId: '13306', teacherName: '张徐', title: '520331实习班主任工作计划下', planTime: '2025-10-31 00:00:00', createTime: '2025-10-31 09:37:43' },
   { id: 3, className: '520331', teacherId: '13306', teacherName: '张徐', title: '520331实习班主任工作计划上', planTime: '2025-10-31 00:00:00', createTime: '2025-10-31 09:36:55' },
   { id: 4, className: '520341', teacherId: '13211', teacherName: '郑莎莎', title: '实习管理工作计划', planTime: '2024-07-01 00:00:00', createTime: '2025-10-30 21:41:54' },
@@ -85,11 +83,13 @@ const searchFields = [
     prop: 'className',
     label: '班级名称',
     type: 'input',
+    span:4,
     placeholder: '请输入班级名称'
   },
   {
     prop: 'teacherInfo',
     label: '工号或姓名',
+    span:4,
     type: 'input',
     placeholder: '请输入工号或姓名'
   }
@@ -105,60 +105,68 @@ const tableColumns = [
   { prop: 'createTime', label: '创建时间', minWidth: 160, align: 'center' }
 ]
 
-// 表单字段
+// 表单字段（分组格式）
 const formFields = [
   {
-    prop: 'className',
-    label: '班级名称',
-    type: 'select',
-    placeholder: '请选择班级',
-    options: [
-      { label: '520112', value: '520112' },
-      { label: '520331', value: '520331' },
-      { label: '520341', value: '520341' },
-      { label: '520332', value: '520332' },
-      { label: '520322', value: '520322' }
+    fields: [
+      {
+        prop: 'className',
+        label: '班级名称',
+        type: 'select',
+        placeholder: '请选择班级',
+        options: [
+          { label: '520112', value: '520112' },
+          { label: '520331', value: '520331' },
+          { label: '520341', value: '520341' },
+          { label: '520332', value: '520332' },
+          { label: '520322', value: '520322' }
+        ]
+      },
+      {
+        prop: 'teacherId',
+        label: '教师工号',
+        type: 'input',
+        placeholder: '请输入教师工号'
+      },
+      {
+        prop: 'teacherName',
+        label: '教师姓名',
+        type: 'input',
+        placeholder: '请输入教师姓名'
+      },
+      {
+        prop: 'title',
+        label: '标题',
+        type: 'input',
+        placeholder: '请输入标题'
+      },
+           {
+        prop: 'planTime',
+        label: '计划时间',
+        type: 'daterange',
+         span: 24,
+        startPlaceholder: '开始日期',
+        endPlaceholder: '结束日期'
+      },
+      {
+        prop: 'content',
+        label: '计划内容',
+        type: 'textarea',
+        rows: 2,
+        span: 24,
+        placeholder: '请输入计划内容'
+      },
+      {
+        prop: 'remark',
+        label: '备注',
+        type: 'textarea',
+        rows: 2,
+         span: 24,
+        placeholder: '请输入备注'
+      }
     ]
   },
-  {
-    prop: 'teacherId',
-    label: '教师工号',
-    type: 'input',
-    placeholder: '请输入教师工号'
-  },
-  {
-    prop: 'teacherName',
-    label: '教师姓名',
-    type: 'input',
-    placeholder: '请输入教师姓名'
-  },
-  {
-    prop: 'title',
-    label: '标题',
-    type: 'input',
-    placeholder: '请输入标题'
-  },
-  {
-    prop: 'planTime',
-    label: '计划时间',
-    type: 'daterange',
-    startPlaceholder: '开始日期',
-    endPlaceholder: '结束日期'
-  },
-  {
-    prop: 'content',
-    label: '计划内容',
-    type: 'textarea',
-    rows: 4,
-    placeholder: '请输入计划内容'
-  },
-  {
-    prop: 'remark',
-    label: '备注',
-    type: 'textarea',
-    rows: 2,
-    placeholder: '请输入备注'
-  }
+
 ]
 
 // 表单校验规则
@@ -258,18 +266,10 @@ const handleDelete = (row) => {
 }
 
 // 提交表单
-const handleSubmit = async () => {
-  const valid = await formRef.value?.validate()
-  if (valid) {
-    ElMessage.success(currentRow.value ? '修改成功' : '添加成功')
-    dialogVisible.value = false
-    crudRef.value?.refresh()
-  }
+const handleSubmit = () => {
+  ElMessage.success(currentRow.value ? '修改成功' : '添加成功')
+  dialogVisible.value = false
+  crudRef.value?.refresh()
 }
 </script>
 
-<style scoped>
-.page-container {
-  padding: 20px;
-}
-</style>
