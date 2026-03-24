@@ -1,192 +1,134 @@
 <template>
-  <div class="file-list-page">
+  <div class="page-container">
     <!-- 面包屑 -->
-    <el-breadcrumb separator="/" class="breadcrumb">
+    <el-breadcrumb separator="/" class="mb-20">
       <el-breadcrumb-item>文件管理</el-breadcrumb-item>
       <el-breadcrumb-item>文件列表</el-breadcrumb-item>
     </el-breadcrumb>
 
-    <el-card class="file-card">
-      <!-- 搜索区域 -->
-      <div class="search-area">
-        <el-input
-          v-model="searchName"
-          placeholder="请输入关键字"
-          class="search-input"
-          clearable
-        >
-          <template #prepend>名称</template>
-        </el-input>
-        <el-button type="primary" @click="handleSearch">
-          <el-icon><Search /></el-icon>搜索
-        </el-button>
-        <el-button type="primary" @click="handleUpload">
-          <el-icon><Upload /></el-icon>上传文件
-        </el-button>
-        <el-button type="primary" @click="handleFolder">
-          <el-icon><Folder /></el-icon>文件夹
-        </el-button>
-      </div>
+    <Crud
+      ref="crudRef"
+      :search-fields="searchFields"
+      :table-columns="tableColumns"
+      :show-index="true"
+      :show-actions="true"
+      :table-actions="{}"
+      :actions="{}"
+      :page-sizes="[10, 20, 50, 100]"
+      :api="apiConfig"
+      :show-search="true"
+    >
+      <!-- 自定义操作按钮 -->
+      <template #extra-operations>
+        <el-button type="primary" @click="handleUpload">上传文件</el-button>
+        <el-button @click="handleNewFolder">新建文件夹</el-button>
+      </template>
 
-      <!-- 文件表格 -->
-      <el-table
-        :data="fileList"
-        style="width: 100%"
-        v-loading="loading"
-        empty-text="暂无数据"
-      >
-        <el-table-column prop="type" label="类型" width="80" align="center">
-          <template #default="{ row }">
-            <el-icon :size="20">
-              <Document v-if="row.type === 'file'" />
-              <Folder v-else />
-            </el-icon>
-          </template>
-        </el-table-column>
-        <el-table-column prop="name" label="文件名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="uploadTime" label="上传日期" width="180" align="center" />
-        <el-table-column prop="size" label="文件大小" width="120" align="center" />
-        <el-table-column prop="uploadUser" label="上传用户" width="120" align="center" />
-      </el-table>
-
-      <!-- 空状态 -->
-      <el-empty v-if="fileList.length === 0 && !loading" description="暂无数据" />
-
-      <!-- 分页 -->
-      <el-pagination
-        v-if="fileList.length > 0"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 30, 50]"
-        :total="total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        class="pagination"
-      />
-    </el-card>
+      <!-- 自定义操作列 -->
+      <template #actions="{ row }">
+        <el-button type="primary" link @click="handleDownload(row)">下载</el-button>
+        <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+      </template>
+    </Crud>
 
     <!-- 上传对话框 -->
-    <el-dialog v-model="uploadDialogVisible" title="上传文件" width="500px">
+    <el-dialog v-model="uploadVisible" title="上传文件" width="500px">
       <el-upload
+        class="upload-demo"
         drag
         action="#"
         :auto-upload="false"
-        :on-change="handleFileChange"
-        :file-list="uploadFileList"
-        multiple
       >
-        <el-icon class="el-icon--upload"><Upload-filled /></el-icon>
-        <div class="el-upload__text">
-          将文件拖到此处，或<em>点击上传</em>
-        </div>
+        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
       </el-upload>
       <template #footer>
-        <el-button @click="uploadDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmUpload">确定</el-button>
+        <el-button @click="uploadVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleUploadConfirm">确定</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Search, Upload, Folder, Document, UploadFilled } from '@element-plus/icons-vue'
+import { ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { UploadFilled } from '@element-plus/icons-vue'
+import Crud from '@/components/Crud/index.vue'
 
-// 搜索
-const searchName = ref('')
-const loading = ref(false)
+const crudRef = ref(null)
+const uploadVisible = ref(false)
 
-// 分页
-const page = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
+// 搜索字段
+const searchFields = [
+  { prop: 'name', label: '名称', type: 'input', placeholder: '请输入文件名' }
+]
 
-// 文件列表
-const fileList = ref([])
+// 表格列配置
+const tableColumns = [
+  { prop: 'type', label: '类型', width: 60, align: 'center' },
+  { prop: 'name', label: '文件名称', minWidth: 200, align: 'left' },
+  { prop: 'createTime', label: '上传日期', minWidth: 160, align: 'center' },
+  { prop: 'size', label: '文件大小', width: 100, align: 'center' },
+  { prop: 'user', label: '上传用户', width: 100, align: 'center' }
+]
 
-// 上传对话框
-const uploadDialogVisible = ref(false)
-const uploadFileList = ref([])
-
-// 搜索
-const handleSearch = () => {
-  console.log('搜索:', searchName.value)
-  loading.value = true
-  setTimeout(() => {
-    loading.value = false
-    fileList.value = []
-    total.value = 0
-  }, 500)
+// API配置
+const apiConfig = {
+  list: (params) => {
+    const mockData = [
+      { id: 1, type: '📄', name: '实习协议模板.docx', createTime: '2025-03-20 10:30:00', size: '25KB', user: '管理员' },
+      { id: 2, type: '📄', name: '实习报告模板.docx', createTime: '2025-03-18 14:20:00', size: '18KB', user: '管理员' },
+      { id: 3, type: '📕', name: '三方协议.pdf', createTime: '2025-03-15 09:15:00', size: '156KB', user: '管理员' },
+      { id: 4, type: '📄', name: '实习安全承诺书.docx', createTime: '2025-03-10 16:45:00', size: '15KB', user: '教师' },
+      { id: 5, type: '📊', name: '实习鉴定表.xlsx', createTime: '2025-03-05 11:20:00', size: '32KB', user: '管理员' }
+    ]
+    return {
+      code: 200,
+      data: {
+        list: mockData,
+        total: mockData.length
+      }
+    }
+  }
 }
 
 // 上传文件
 const handleUpload = () => {
-  uploadDialogVisible.value = true
-  uploadFileList.value = []
+  uploadVisible.value = true
 }
 
-// 文件夹
-const handleFolder = () => {
-  ElMessage.info('文件夹功能')
-}
-
-// 文件变化
-const handleFileChange = (file, fileList) => {
-  uploadFileList.value = fileList
-}
-
-// 确认上传
-const confirmUpload = () => {
-  if (uploadFileList.value.length === 0) {
-    ElMessage.warning('请选择文件')
-    return
-  }
+// 上传确认
+const handleUploadConfirm = () => {
   ElMessage.success('上传成功')
-  uploadDialogVisible.value = false
+  uploadVisible.value = false
+  crudRef.value?.refresh()
 }
 
-// 分页大小变化
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  handleSearch()
+// 新建文件夹
+const handleNewFolder = () => {
+  ElMessage.info('新建文件夹功能')
 }
 
-// 当前页变化
-const handleCurrentChange = (val) => {
-  page.value = val
-  handleSearch()
+// 下载
+const handleDownload = (row) => {
+  ElMessage.success('开始下载: ' + row.name)
+}
+
+// 删除
+const handleDelete = (row) => {
+  ElMessageBox.confirm('确定要删除该文件吗？', '删除确认', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    ElMessage.success('删除成功')
+    crudRef.value?.refresh()
+  }).catch(() => {})
 }
 </script>
 
 <style scoped>
-.file-list-page {
-  padding: 20px;
-}
-
-.breadcrumb {
-  margin-bottom: 20px;
-}
-
-.file-card {
-  min-height: 500px;
-}
-
-.search-area {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.search-input {
-  width: 300px;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
+.page-container { padding: 20px; }
+.mb-20 { margin-bottom: 20px; }
 </style>
