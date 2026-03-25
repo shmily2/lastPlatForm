@@ -277,8 +277,8 @@ const menus = [
         id: 84,
         title: '信息采集',
         icon: 'OfficeBuilding',
-        path: '/personnel/class',
-        component: 'personnel/class/index',
+        path: '/personnel/informationCollection',
+        component: 'personnel/informationCollection/index',
         hidden: false,
         permissions: ['personnel:class:view']
       },

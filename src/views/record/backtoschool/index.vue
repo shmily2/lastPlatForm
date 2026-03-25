@@ -5,7 +5,7 @@
       :search-fields="searchFields"
       :table-columns="tableColumns"
       :show-index="true"
-      :show-actions="true"
+      :show-actions="false"
       :table-actions="{}"
       :actions="{}"
       :page-sizes="[10, 20, 50, 100]"
@@ -13,50 +13,130 @@
       :show-search="true"
       @search="handleSearch"
       @refresh="handleRefresh"
-    >
-      <template #extra-operations>
-        <el-button type="primary" @click="handleAdd">新增</el-button>
-      </template>
-
-      <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-        <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
-      </template>
-    </Crud>
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import Crud from '@/components/Crud/index.vue'
 
 const crudRef = ref(null)
 
+// 模拟数据
+const mockData = [
+  {
+    id: 1,
+    studentName: '张三',
+    className: '20艺术1班',
+    returnTime: '2026-03-15 00:00:00',
+    creator: '王老师',
+    createTime: '2026-03-15 10:30:00'
+  },
+  {
+    id: 2,
+    studentName: '李小红',
+    className: '20艺术1班',
+    returnTime: '2026-03-15 00:00:00',
+    creator: '王老师',
+    createTime: '2026-03-15 10:35:00'
+  },
+  {
+    id: 3,
+    studentName: '王五',
+    className: '20会计2班',
+    returnTime: '2026-03-16 00:00:00',
+    creator: '李老师',
+    createTime: '2026-03-16 09:20:00'
+  },
+  {
+    id: 4,
+    studentName: '赵六',
+    className: '20会计2班',
+    returnTime: '2026-03-16 00:00:00',
+    creator: '李老师',
+    createTime: '2026-03-16 09:25:00'
+  },
+  {
+    id: 5,
+    studentName: '孙七',
+    className: '20计算机3班',
+    returnTime: '2026-03-17 00:00:00',
+    creator: '张老师',
+    createTime: '2026-03-17 11:10:00'
+  }
+]
+
+// 搜索字段
 const searchFields = [
-  { prop: 'studentName', label: '学生姓名', type: 'input', placeholder: '请输入学生姓名' }
+  {
+    prop: 'organization',
+    label: '组织架构',
+    type: 'organizational',
+    span: 4
+  },
+  {
+    prop: 'studentName',
+    label: '学生姓名',
+    type: 'input',
+    span: 4,
+    placeholder: '请输入学生姓名'
+  },
+  {
+    prop: 'returnTime',
+    label: '返校时间',
+    type: 'date',
+    span: 4,
+    placeholder: '请选择返校时间'
+  }
 ]
 
+// 表格列配置
 const tableColumns = [
-  { prop: 'studentId', label: '学号', width: 120, align: 'center' },
-  { prop: 'studentName', label: '学生姓名', width: 100, align: 'center' },
-  { prop: 'className', label: '班级', width: 120, align: 'center' },
-  { prop: 'returnTime', label: '返校时间', minWidth: 160, align: 'center' },
-  { prop: 'status', label: '状态', width: 100, align: 'center', tag: true }
+  { prop: 'studentName', label: '学生姓名', width: 120, align: 'center' },
+  { prop: 'className', label: '班级', width: 150, align: 'center' },
+  { prop: 'returnTime', label: '返校时间', minWidth: 180, align: 'center' },
+  { prop: 'creator', label: '创建人', width: 120, align: 'center' },
+  { prop: 'createTime', label: '创建时间', minWidth: 180, align: 'center' }
 ]
 
+// API配置 - 使用模拟数据
 const apiConfig = {
-  list: '/api/record/backtoschool/list'
+  list: (params) => {
+    let result = [...mockData]
+    // 搜索过滤
+    if (params.className) {
+      result = result.filter(item => item.className === params.className)
+    }
+    if (params.studentName) {
+      result = result.filter(item => item.studentName.includes(params.studentName))
+    }
+    if (params.returnTime) {
+      result = result.filter(item => item.returnTime.startsWith(params.returnTime))
+    }
+    // 分页
+    const pageNum = params.pageNum || 1
+    const pageSize = params.pageSize || 10
+    const start = (pageNum - 1) * pageSize
+    const end = start + pageSize
+    return {
+      code: 200,
+      data: {
+        list: result.slice(start, end),
+        total: result.length
+      }
+    }
+  }
 }
 
-const handleSearch = (params) => console.log('搜索:', params)
-const handleRefresh = () => crudRef.value?.refresh()
-const handleAdd = () => ElMessage.info('新增功能')
-const handleEdit = (row) => ElMessage.info('编辑: ' + row.studentName)
-const handleDelete = (row) => {
-  ElMessageBox.confirm('确定删除？', '提示', { type: 'warning' })
-    .then(() => { ElMessage.success('删除成功'); crudRef.value?.refresh() })
-    .catch(() => {})
+// 搜索
+const handleSearch = (params) => {
+  console.log('搜索参数:', params)
+}
+
+// 刷新
+const handleRefresh = () => {
+  console.log('刷新列表')
+  crudRef.value?.refresh()
 }
 </script>
-

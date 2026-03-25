@@ -1,19 +1,8 @@
 <template>
   <div class="check-record-page">
-    <Crud
-      ref="crudRef"
-      :search-fields="searchFields"
-      :table-columns="tableColumns"
-      :show-index="true"
-      :show-actions="true"
-      :table-actions="{}"
-      :actions="{}"
-      :page-sizes="[10, 20, 50, 100]"
-      :api="apiConfig"
-      :show-search="true"
-      @search="handleSearch"
-      @refresh="handleRefresh"
-    >
+    <Crud ref="crudRef" :search-fields="searchFields" :table-columns="tableColumns" :show-index="true"
+      :show-actions="true" :table-actions="{}" :actions="{}" :page-sizes="[10, 20, 50, 100]" :api="apiConfig"
+      :show-search="true" @search="handleSearch" @refresh="handleRefresh">
       <!-- 自定义操作列 -->
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
@@ -22,20 +11,9 @@
     </Crud>
 
     <!-- 编辑对话框 -->
-    <Dialog
-      ref="dialogRef"
-      v-model="dialogVisible"
-      title="编辑抽查记录"
-      width="600px"
-      :show-footer="true"
-      :show-form="true"
-      :form-fields="formFields"
-      :form-data="formData"
-      :form-rules="formRules"
-      label-width="100px"
-      @close="handleDialogClose"
-      @confirm="handleSubmit"
-    />
+    <Dialog ref="dialogRef" v-model="dialogVisible" title="编辑抽查记录" width="600px" :show-footer="true" :show-form="true"
+      :form-fields="formFields" :form-data="formData" :form-rules="formRules" label-width="100px"
+      @close="handleDialogClose" @confirm="handleSubmit" />
   </div>
 </template>
 
@@ -103,7 +81,8 @@ const searchFields = [
 const tableColumns = [
   { prop: 'studentNo', label: '学号', minWidth: 120, align: 'center' },
   { prop: 'studentName', label: '学生姓名', minWidth: 100, align: 'center' },
-  { prop: 'checkStatus', label: '抽查状态', width: 100, align: 'center',
+  {
+    prop: 'checkStatus', label: '抽查状态', width: 100, align: 'center',
     tag: (value) => value === '已抽查' ? 'success' : 'info'
   },
   { prop: 'checker', label: '抽查人', width: 100, align: 'center' },
@@ -111,17 +90,21 @@ const tableColumns = [
 ]
 
 // 表单字段配置
-const formFields = [
-  { prop: 'studentNo', label: '学号', type: 'input', span: 24, disabled: true },
-  { prop: 'studentName', label: '学生姓名', type: 'input', span: 24, disabled: true },
-  { prop: 'checkStatus', label: '抽查状态', type: 'select', span: 24, required: true,
-    options: [
-      { label: '已抽查', value: '已抽查' },
-      { label: '未抽查', value: '未抽查' }
-    ]
-  },
-  { prop: 'checker', label: '抽查人', type: 'input', span: 24, required: true },
-  { prop: 'checkTime', label: '抽查时间', type: 'datetime', span: 24, required: true }
+const formFields = [{
+  fields: [
+    { prop: 'studentNo', label: '学号', type: 'input', span: 24, disabled: true },
+    { prop: 'studentName', label: '学生姓名', type: 'input', span: 24, disabled: true },
+    {
+      prop: 'checkStatus', label: '抽查状态', type: 'select', span: 24, required: true,
+      options: [
+        { label: '已抽查', value: '已抽查' },
+        { label: '未抽查', value: '未抽查' }
+      ]
+    },
+    { prop: 'checker', label: '抽查人', type: 'input', span: 24, required: true },
+    { prop: 'checkTime', label: '抽查时间', type: 'datetime', span: 24, required: true }
+  ]
+}
 ]
 
 // 表单验证规则
@@ -172,7 +155,7 @@ const handleDelete = (row) => {
   }).then(() => {
     ElMessage.success('删除成功')
     crudRef.value?.refresh()
-  }).catch(() => {})
+  }).catch(() => { })
 }
 
 // 提交表单
@@ -192,5 +175,3 @@ const handleDialogClose = () => {
   dialogRef.value?.formRef?.clearValidate()
 }
 </script>
-
-

@@ -76,6 +76,10 @@
               :rows="field.rows || 4" :placeholder="field.placeholder || `请输入${field.label}`"
               :maxlength="field.maxlength" :show-word-limit="field.showWordLimit"
               :clearable="field.clearable !== false" :disabled="field.disabled || disabled" style="width: 100%" />
+            <!-- 富文本编辑器 -->
+            <Editor v-else-if="field.type === 'editor'" v-model="formData[field.prop]"
+              :placeholder="field.placeholder || `请输入${field.label}`" :readonly="field.disabled || disabled"
+              style="width: 100%" />
             <!-- 签名板 -->
             <div v-else-if="field.type === 'signature'" class="signature-pad" :id="'signature-container-' + field.prop">
               <canvas :id="'signature-canvas-' + field.prop"
@@ -198,6 +202,7 @@ import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { ElImageViewer } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import SignaturePad from 'signature_pad'
+import Editor from '@/components/Editor/index.vue'
 
 
 const props = defineProps({

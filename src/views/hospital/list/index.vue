@@ -47,25 +47,16 @@
       :title="dialogTitle"
       width="900px"
       :show-footer="!isView"
-      :show-form="false"
-      :form-data="formData"
+      :show-form="true"
       :view-mode="isView"
+      :form-data="formData"
+      :form-fields="formFields"
+      :form-rules="formRules"
+      :form-label-width="formLabelWidth"
       @update:form-data="formData = $event"
       @close="handleDialogClose"
       @confirm="handleSubmit"
-    >
-      <BaseForm
-        :gutter="20"
-        :model-value="formData"
-        @update:model-value="formData = $event"
-        :fields="formFields"
-        :rules="formRules"
-        label-width="140px"
-        :show-buttons="false"
-        :view-mode="isView"
-        :disabled="isView"
-      />
-    </Dialog>
+    />
   </div>
 </template>
 
@@ -74,7 +65,6 @@ import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import Crud from '@/components/Crud/index.vue'
 import Dialog from '@/components/Dialog/index.vue'
-import BaseForm from '@/components/Form/index.vue'
 
 // Mock API 配置
 const apiConfig = {
@@ -247,6 +237,7 @@ const dialogVisible = ref(false)
 const dialogTitle = ref('查看企业信息')
 const isView = ref(false)
 const dialogRef = ref()
+const formLabelWidth = '140px'
 
 // 表单数据
 const formData = reactive({
@@ -383,8 +374,3 @@ const handleDialogClose = () => {
 }
 </script>
 
-<style scoped>
-.hospital-list-page {
-  padding: 20px;
-}
-</style>

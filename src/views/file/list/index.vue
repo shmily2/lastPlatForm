@@ -6,23 +6,11 @@
       <el-breadcrumb-item>文件列表</el-breadcrumb-item>
     </el-breadcrumb>
 
-    <Crud
-      ref="crudRef"
-      :search-fields="searchFields"
-      :table-columns="tableColumns"
-      :show-index="true"
-      :show-actions="true"
-      :table-actions="{ view: true, edit: true, delete: true }"
-      :actions="{ add: false, batchDelete: false, export: true, refresh: true }"
-      :page-sizes="[10, 20, 50, 100]"
-      :api="apiConfig"
-      :show-search="true"
-      @search="handleSearch"
-      @refresh="handleRefresh"
-      @view="handleView"
-      @edit="handleEdit"
-      @delete="handleDelete"
-    >
+    <Crud ref="crudRef" :search-fields="searchFields" :table-columns="tableColumns" :show-index="true"
+      :show-actions="true" :table-actions="{ view: true, edit: true, delete: true }"
+      :actions="{ add: false, batchDelete: false, export: true, refresh: true }" :page-sizes="[10, 20, 50, 100]"
+      :api="apiConfig" :show-search="true" @search="handleSearch" @refresh="handleRefresh" @view="handleView"
+      @edit="handleEdit" @delete="handleDelete">
       <!-- 自定义操作按钮 -->
       <template #extra-operations>
         <el-button type="primary" @click="handleUpload">上传文件</el-button>
@@ -31,28 +19,16 @@
 
       <!-- 自定义操作列 -->
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleView(row)">查看</el-button>
+        <!-- <el-button type="primary" link @click="handleView(row)">查看</el-button> -->
         <el-button type="success" link @click="handleEdit(row)">下载</el-button>
         <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
       </template>
     </Crud>
-
-    <!-- 查看/编辑对话框 -->
-    <Dialog
-      ref="dialogRef"
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="600px"
-      :show-footer="!isView"
-      @confirm="handleSubmit"
-    >
-      <BaseForm
-        v-model="formData"
-        :fields="formFields"
-        :rules="formRules"
-        label-width="100px"
-      />
-    </Dialog>
+    <!-- 查看/编辑对话框
+    <Dialog ref="dialogRef" v-model="dialogVisible" :title="dialogTitle" width="400px" :show-footer="!isView"
+      :show-form="true" :view-mode="isView" :form-data="formData" :form-fields="formFields" :form-rules="formRules"
+      :form-label-width="formLabelWidth" @update:form-data="formData = $event" @close="handleDialogClose"
+      @confirm="handleSubmit" /> -->
   </div>
 </template>
 
@@ -60,14 +36,9 @@
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import Crud from '@/components/Crud/index.vue'
-import Dialog from '@/components/Dialog/index.vue'
-import BaseForm from '@/components/Form/index.vue'
 
 const crudRef = ref(null)
-const dialogRef = ref(null)
 const dialogVisible = ref(false)
-const dialogTitle = ref('')
-const isView = ref(false)
 
 // 模拟数据
 const mockData = [
@@ -116,30 +87,6 @@ const apiConfig = {
   }
 }
 
-// 表单字段
-const formFields = [
-  { prop: 'name', label: '文件名', type: 'input', placeholder: '请输入文件名' },
-  { prop: 'type', label: '文件类型', type: 'select', placeholder: '请选择文件类型',
-    options: [
-      { label: 'Word', value: 'Word' },
-      { label: 'Excel', value: 'Excel' },
-      { label: 'PDF', value: 'PDF' },
-      { label: '其他', value: '其他' }
-    ]
-  }
-]
-
-// 表单校验规则
-const formRules = {
-  name: [{ required: true, message: '请输入文件名', trigger: 'blur' }]
-}
-
-// 表单数据
-const formData = reactive({
-  name: '',
-  type: ''
-})
-
 // 搜索
 const handleSearch = (params) => {
   console.log('搜索:', params)
@@ -160,13 +107,6 @@ const handleNewFolder = () => {
   ElMessage.info('新建文件夹功能')
 }
 
-// 查看
-const handleView = (row) => {
-  dialogTitle.value = '查看文件'
-  isView.value = true
-  Object.assign(formData, row)
-  dialogVisible.value = true
-}
 
 // 编辑/下载
 const handleEdit = (row) => {
@@ -182,23 +122,15 @@ const handleDelete = (row) => {
   }).then(() => {
     ElMessage.success('删除成功')
     crudRef.value?.refresh()
-  }).catch(() => {})
-}
-
-// 提交
-const handleSubmit = () => {
-  ElMessage.success('操作成功')
-  dialogVisible.value = false
-  crudRef.value?.refresh()
+  }).catch(() => { })
 }
 </script>
 
 <style scoped>
-.page-container {
-  padding: 20px;
-}
-
 .mb-20 {
-  margin-bottom: 20px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
 }
 </style>

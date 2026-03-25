@@ -151,8 +151,7 @@ const formFields = [
       {
         prop: 'content',
         label: '计划内容',
-        type: 'textarea',
-        rows: 2,
+        type: 'editor',
         span: 24,
         placeholder: '请输入计划内容'
       },

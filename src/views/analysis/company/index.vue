@@ -22,9 +22,9 @@
       </template>
 
       <!-- 自定义操作列 -->
-      <template #actions="{ row }">
+      <!-- <template #actions="{ row }">
         <el-button type="primary" link @click="handleViewDetail(row)">考评细则</el-button>
-      </template>
+      </template> -->
     </Crud>
 
     <!-- 考评细则对话框 -->
@@ -102,8 +102,9 @@ const tableColumns = [
   { prop: 'clockScore', label: '打卡得分', width: 100, align: 'center' },
   { prop: 'weeklyScore', label: '周报得分', width: 100, align: 'center' },
   { prop: 'monthlyScore', label: '月报得分', width: 100, align: 'center' },
-  { prop: 'totalScore', label: '总分', width: 100, align: 'center', formatter: (row) => row.totalScore.toFixed(2) },
-  { prop: 'assessmentMonth', label: '考评月份', width: 100, align: 'center' }
+  { prop: 'totalScore', label: '总分', width: 100, align: 'center', formatter: (row) => row.totalScore ? Number(row.totalScore).toFixed(2) : '-' },
+  { prop: 'assessmentMonth', label: '考评月份', width: 100, align: 'center' },
+    { prop: 'assessmentTime', label: '考评时间', width: 100, align: 'center' },
 ]
 
 // 表单字段（分组格式）

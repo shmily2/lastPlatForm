@@ -141,7 +141,7 @@ const searchFields = [
     label: '计划名称',
     type: 'input',
     placeholder: '计划名称',
-    span: 6
+    span: 4
   },
   {
     prop: 'dateRange',
@@ -149,7 +149,7 @@ const searchFields = [
     type: 'daterange',
     startPlaceholder: '开始日期',
     endPlaceholder: '结束日期',
-    span: 8
+    span: 6
   }
 ]
 
