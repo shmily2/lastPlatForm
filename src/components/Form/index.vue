@@ -234,7 +234,7 @@ const props = defineProps({
   // 栅格间距
   gutter: {
     type: Number,
-    default: 10
+    default: 0
   },
   // 是否禁用
   disabled: {

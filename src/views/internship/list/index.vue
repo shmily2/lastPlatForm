@@ -164,14 +164,14 @@ const searchFields = [
     prop: 'organization',
     label: '组织架构',
     type: 'organizational',
-    span: 6
+    span: 4
   },
   {
     prop: 'studentCompany',
     label: '学生姓名/企业姓名',
     type: 'input',
     placeholder: '请输入学生姓名或企业名称',
-    span: 6
+    span: 4
   },
   {
     prop: 'effective',
@@ -182,7 +182,7 @@ const searchFields = [
       { label: '是', value: '1' },
       { label: '否', value: '0' }
     ],
-    span: 6
+    span: 4
   },
   {
     prop: 'arrangeType',
@@ -194,7 +194,7 @@ const searchFields = [
       { label: '统一安排', value: 'unified' },
       { label: '校企合作', value: 'cooperation' }
     ],
-    span: 6
+    span: 4
   },
   {
     prop: 'matchMajor',
@@ -205,7 +205,7 @@ const searchFields = [
       { label: '是', value: '1' },
       { label: '否', value: '0' }
     ],
-    span: 6
+    span: 4
   },
   {
     prop: 'insured',
@@ -216,7 +216,7 @@ const searchFields = [
       { label: '是', value: '1' },
       { label: '否', value: '0' }
     ],
-    span: 6
+    span: 4
   },
   {
     prop: 'status',
@@ -231,7 +231,7 @@ const searchFields = [
       { label: '长病假', value: '5' },
       { label: '实习结束', value: '6' }
     ],
-    span: 6
+    span: 4
   },
   {
     prop: 'archived',
@@ -244,7 +244,7 @@ const searchFields = [
       { label: '审核通过', value: '3' },
       { label: '审核拒绝', value: '3' }
     ],
-    span: 6
+    span: 4
   }
 ]
 

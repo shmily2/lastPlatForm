@@ -365,7 +365,6 @@ const handleCurrentChange = (page) => {
 
 <style scoped>
 .attendance-record-page {
-  padding: 10px;
   background: #f5f7fa;
   min-height: calc(100vh - 84px);
 }

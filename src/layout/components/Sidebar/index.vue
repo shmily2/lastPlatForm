@@ -98,7 +98,7 @@ const handleSelect = (index) => {
 
 <style scoped>
 .sidebar-container {
-  width: 210px;
+  width: 220px;
   height: 100%;
   background: linear-gradient(180deg, #1a5cd6 0%, #2979ff 100%);
   transition: background 0.3s;
@@ -127,4 +127,5 @@ const handleSelect = (index) => {
 :deep(.el-sub-menu.is-active >.el-sub-menu__title){
  background-color: rgba(255, 255, 255, 0.2) !important;
 }
+
 </style>

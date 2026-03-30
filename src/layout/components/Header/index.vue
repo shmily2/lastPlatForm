@@ -128,7 +128,7 @@ const handleCommand = (command) => {
   display: flex;
   align-items: center;
   height: 60px;
-  padding: 0 20px;
+  padding: 0 50px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: background 0.3s;
 }

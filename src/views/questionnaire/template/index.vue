@@ -111,7 +111,6 @@ const tableColumns = [
   { prop: 'createTime', label: '创建时间', width: 160, align: 'center' },
   { prop: 'participantCount', label: '参与人数', width: 100, align: 'center' },
   { prop: 'status', label: '状态', width: 80, align: 'center' },
-  { prop: 'action', label: '操作', width: 180, align: 'center', fixed: 'right' }
 ]
 
 // API配置

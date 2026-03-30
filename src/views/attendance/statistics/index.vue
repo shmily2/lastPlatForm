@@ -203,7 +203,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .statistics-page {
-  padding: 20px;
+  padding: 10px;
 }
 
 .filter-card {
